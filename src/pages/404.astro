@@ -1,0 +1,42 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="404 — GO Studio" description="Page not found.">
+  <section class="nf">
+    <div class="shell">
+      <p class="nf__num">404</p>
+      <h1 class="nf__title">Page not found.</h1>
+      <p class="nf__lede">Whatever you were looking for, it isn't here.</p>
+      <a href="/" class="nf__home">← Back to studio</a>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .nf {
+    padding-top: clamp(10rem, 18vw, 16rem);
+    padding-bottom: clamp(6rem, 10vw, 10rem);
+  }
+  .nf__num {
+    font-family: var(--mono); font-size: 0.75rem;
+    text-transform: uppercase; letter-spacing: 0.14em;
+    color: var(--ink-mute); margin: 0 0 1rem;
+  }
+  .nf__title {
+    font-family: var(--display); font-weight: 900;
+    font-size: clamp(2rem, 1.5rem + 3vw, 4rem);
+    letter-spacing: -0.025em;
+    margin: 0 0 1rem;
+  }
+  .nf__lede {
+    color: var(--ink-soft);
+    font-size: var(--step-2);
+    margin: 0 0 2rem;
+  }
+  .nf__home {
+    font-size: var(--step-1);
+    border-bottom: 1px solid var(--ink);
+    padding-bottom: 2px;
+  }
+</style>

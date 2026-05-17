@@ -1,0 +1,319 @@
+/* Shared case-study page styles. Imported by /work/* pages. */
+.intro {
+  padding-top: clamp(8rem, 14vw, 13rem);
+  padding-bottom: clamp(4rem, 7vw, 6rem);
+}
+.intro__eyebrow {
+  font-family: var(--mono); font-size: 0.75rem;
+  text-transform: uppercase; letter-spacing: 0.14em;
+  color: var(--ink-mute);
+  margin: 0 0 clamp(2rem, 4vw, 3rem);
+}
+.intro__client {
+  font-family: var(--display); font-weight: 900;
+  font-size: clamp(1.75rem, 1.2rem + 2.5vw, 3rem);
+  line-height: 0.98;
+  letter-spacing: -0.025em;
+  margin: 0;
+  max-width: 22ch;
+}
+.intro__body {
+  margin-top: clamp(2rem, 4vw, 3rem);
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  gap: clamp(2rem, 4vw, 4rem);
+  align-items: start;
+  padding-top: clamp(1.5rem, 3vw, 2.25rem);
+  border-top: 1px solid var(--rule);
+}
+.intro__meta {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem 1.5rem;
+  margin: 0;
+}
+.intro__meta-row { display: block; }
+.intro__meta-key {
+  font-family: var(--mono); font-size: 0.7rem;
+  text-transform: uppercase; letter-spacing: 0.14em;
+  color: var(--ink-mute);
+  margin: 0; padding-bottom: 0.25rem;
+}
+.intro__meta-val {
+  font-family: var(--display); font-weight: 700;
+  font-size: clamp(1.25rem, 1rem + 0.8vw, 1.75rem);
+  letter-spacing: -0.015em;
+  color: var(--ink);
+  margin: 0; line-height: 1.1;
+}
+@media (max-width: 720px) {
+  .intro__body { grid-template-columns: 1fr; padding-top: 2rem; }
+}
+
+.challenge {
+  padding-block: clamp(2rem, 3.5vw, 3rem);
+  border-top: 1px solid var(--rule);
+}
+.challenge__title {
+  font-family: var(--display); font-weight: 700;
+  font-size: clamp(1.5rem, 1.1rem + 1.8vw, 2.5rem);
+  letter-spacing: -0.018em;
+  line-height: 1.08;
+  margin: 0 0 1.25rem;
+  max-width: 26ch;
+  color: var(--ink-soft);
+}
+.challenge__title em { color: var(--ink); font-style: normal; }
+
+/* ───────────── Showcase ───────────── */
+.showcase {
+  padding-block: clamp(2rem, 4vw, 3.5rem) clamp(3rem, 6vw, 5rem);
+  border-top: 1px solid var(--rule);
+}
+.showcase__inner {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  column-gap: clamp(1rem, 2vw, 1.5rem);
+  row-gap: 0;
+}
+.showcase__label {
+  grid-column: 1 / -1;
+  font-family: var(--mono); font-size: 0.75rem;
+  text-transform: uppercase; letter-spacing: 0.14em;
+  color: var(--ink-mute);
+  margin: 0 0 clamp(1rem, 2vw, 1.5rem);
+}
+.showcase__video {
+  grid-column: 2 / 12;
+  border: 1px solid var(--rule);
+  border-radius: 14px;
+  background: var(--surface);
+  padding: clamp(0.4rem, 0.8vw, 0.6rem);
+  box-shadow: 0 1px 0 var(--rule-soft), 0 30px 60px -40px oklch(15% 0.005 280 / 0.35);
+  margin: 0;
+}
+.showcase__video-bar {
+  height: 22px;
+  display: flex; align-items: center; gap: 6px;
+  padding: 0 10px;
+  border-radius: 8px 8px 0 0;
+}
+.showcase__video-bar i {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--rule);
+}
+.showcase__video .ph {
+  aspect-ratio: 16 / 9;
+  border-radius: 0 0 8px 8px;
+}
+
+.showcase__phones {
+  grid-column: 1 / -1;
+  position: relative;
+  width: 100%;
+  margin-top: clamp(2rem, 4vw, 3rem);
+  aspect-ratio: 1 / 1;
+}
+.phone {
+  position: absolute;
+  border-radius: 28px;
+  border: 1px solid var(--rule);
+  background: var(--surface);
+  padding: 10px;
+}
+.phone .ph {
+  aspect-ratio: 9 / 19;
+  border-radius: 18px;
+}
+.showcase__m1 { top: 0%;  left: 12%;  width: 22%; }
+.showcase__m2 { top: 23%; right: 12%; width: 22%; }
+.showcase__m3 { top: 56%; left: 28%;  width: 22%; }
+
+@media (max-width: 860px) {
+  .showcase__video {
+    grid-column: 1 / -1;
+    width: min(640px, 100%);
+    margin-inline: auto;
+  }
+  .showcase__phones { aspect-ratio: 1 / 1.36; }
+  .showcase__m1 { top: 0%;  left: 4%;  width: 30%; }
+  .showcase__m2 { top: 23%; right: 4%; left: auto; width: 30%; }
+  .showcase__m3 { top: 53%; left: 33%; width: 30%; }
+}
+@media (max-width: 560px) {
+  .showcase__phones { aspect-ratio: 1 / 1.65; }
+  .showcase__m1 { top: 0%;  left: 4%;  width: 36%; }
+  .showcase__m2 { top: 23%; right: 4%; left: auto; width: 36%; }
+  .showcase__m3 { top: 52%; left: 20%; width: 36%; }
+}
+
+/* ───────────── Done / Architecture ───────────── */
+.done {
+  padding-block: clamp(5rem, 9vw, 8rem) clamp(2rem, 4vw, 3rem);
+  border-top: 1px solid var(--rule);
+}
+.done__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  gap: clamp(2rem, 5vw, 5rem);
+  align-items: start;
+  margin-bottom: clamp(3rem, 6vw, 5rem);
+}
+.done__services {
+  display: flex; flex-wrap: wrap; gap: 0.4rem;
+  margin-top: 1.5rem;
+}
+.done__services span {
+  padding: 0.4rem 0.85rem;
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  font-size: 0.8rem;
+  color: var(--ink-soft);
+}
+.done__caption {
+  margin-top: 1.25rem;
+  font-family: var(--mono); font-size: 0.75rem;
+  color: var(--ink-mute);
+  text-transform: uppercase; letter-spacing: 0.14em;
+}
+@media (max-width: 720px) {
+  .done__grid { grid-template-columns: 1fr; }
+}
+
+.section-title {
+  font-family: var(--display); font-weight: 700;
+  font-size: var(--step-3);
+  letter-spacing: -0.02em;
+  margin: 0 0 clamp(2rem, 4vw, 3rem);
+  line-height: 1.05;
+}
+
+/* Stat strip */
+.stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: clamp(1.25rem, 2.5vw, 2rem) clamp(1.5rem, 3vw, 2.5rem);
+  padding-top: clamp(1.5rem, 3vw, 2rem);
+  margin: 0 0 clamp(1.5rem, 3vw, 2rem);
+  border-top: 1px solid var(--rule);
+}
+.stat-key {
+  font-family: var(--mono); font-size: 0.7rem;
+  text-transform: uppercase; letter-spacing: 0.14em;
+  color: var(--ink-mute);
+  margin: 0 0 0.4rem;
+}
+.stat-val {
+  font-family: var(--display); font-weight: 700;
+  font-size: clamp(1.5rem, 1.1rem + 1.4vw, 2.25rem);
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  margin: 0; line-height: 1.05;
+}
+@media (max-width: 720px) {
+  .stats { grid-template-columns: 1fr 1fr; }
+}
+
+/* Diagram container — wraps SVG (desktop) and mobile stack */
+.diagram {
+  position: relative;
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  padding: clamp(1.25rem, 2.5vw, 2rem);
+  background: var(--surface);
+  color: var(--ink);
+  overflow: hidden;
+  margin-top: clamp(1.5rem, 3vw, 2rem);
+}
+.diagram svg {
+  width: 100%; height: auto; display: block;
+  color: var(--ink);
+}
+.diagram__mobile { display: none; }
+@media (max-width: 720px) {
+  .diagram > svg { display: none; }
+  .diagram__mobile { display: grid; gap: 0.5rem; }
+}
+.dnode {
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  padding: 0.85rem 1rem;
+  text-align: center;
+  font-family: var(--mono); font-size: 0.7rem;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--ink);
+  background: var(--bg);
+}
+.dnode small {
+  display: block; margin-top: 0.4rem;
+  font-size: 0.65rem; opacity: 0.55;
+  text-transform: none; letter-spacing: 0;
+}
+.dpipe {
+  text-align: center;
+  font-family: var(--mono); font-size: 0.7rem;
+  color: var(--ink-mute);
+  letter-spacing: 0.12em;
+  padding: 0.2rem 0;
+}
+.dgrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.4rem;
+}
+.dgrid--3 { grid-template-columns: repeat(3, 1fr); }
+.dgrid > span {
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  padding: 0.6rem;
+  text-align: center;
+  font-family: var(--mono); font-size: 0.7rem;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  background: var(--bg);
+}
+.dgrid > span.span2 { grid-column: 1 / -1; }
+
+/* ───────────── Project agent ───────────── */
+.agent {
+  position: relative;
+  padding-block: clamp(2rem, 4vw, 3rem) clamp(3rem, 6vw, 5rem);
+  border-top: 1px solid var(--rule-soft);
+  overflow: hidden;
+}
+.agent__motif {
+  position: absolute; inset: 0; z-index: 0;
+  color: var(--ink); opacity: 0.035;
+  pointer-events: none;
+}
+.agent__motif svg { width: 100%; height: 100%; display: block; }
+.agent .shell { position: relative; z-index: 1; }
+
+/* ───────────── Next project ───────────── */
+.next {
+  border-top: 1px solid var(--rule);
+  padding-block: clamp(3.5rem, 6vw, 6rem);
+  text-align: center;
+  background: var(--bg-dark);
+  color: var(--bg);
+}
+.next__eyebrow {
+  font-family: var(--mono); font-size: 0.7rem;
+  text-transform: uppercase; letter-spacing: 0.14em;
+  color: oklch(100% 0 0 / 0.45);
+  margin: 0 0 1rem;
+}
+.next__title {
+  font-family: var(--display); font-weight: 900;
+  font-size: clamp(2.5rem, 2rem + 4vw, 5rem);
+  letter-spacing: -0.03em;
+  line-height: 0.98;
+  margin: 0 0 1.5rem;
+}
+.next__arrow {
+  display: inline-flex; align-items: center; gap: 0.5rem;
+  font-family: var(--mono); font-size: 0.85rem;
+  color: oklch(100% 0 0 / 0.7);
+}
+.next a:hover .next__title { text-decoration: underline; text-underline-offset: 8px; }
+
+/* Reusable agent motif SVG paths share same color via .agent__motif color rule. */

@@ -1,0 +1,77 @@
+---
+export interface Props {
+  href: string;
+  name: string;
+  description: string;
+  tags: string[];
+  mediaLabel: string;
+  open?: boolean;
+  variant?: 'default' | 'lead' | 'offset';
+}
+const { href, name, description, tags, mediaLabel, open = false, variant = 'default' } = Astro.props;
+---
+
+<article class={`work-card work-card--${variant}`}>
+  <a href={href}>
+    <div class={`work-card__media${open ? ' work-card__media--open' : ''}`}>
+      <span class="placeholder-tag">{mediaLabel}</span>
+    </div>
+    <div class="work-card__meta">
+      <div>
+        <div class="work-card__name">{name}</div>
+        <p class="work-card__desc">{description}</p>
+      </div>
+      <span aria-hidden="true">{open ? '→' : '↗'}</span>
+    </div>
+    <div class="work-card__tags">
+      {tags.map(tag => <span>{tag}</span>)}
+    </div>
+  </a>
+</article>
+
+<style>
+  .work-card__media {
+    aspect-ratio: 3 / 4;
+    background: oklch(20% 0.01 280);
+    border-radius: 10px;
+    position: relative;
+    overflow: hidden;
+    display: grid; place-items: center;
+  }
+  .work-card--lead   .work-card__media { aspect-ratio: 4 / 5; }
+  .work-card--offset .work-card__media { aspect-ratio: 4 / 5; }
+
+  .work-card__media--open {
+    background: oklch(94% 0.005 90);
+    border: 1px dashed var(--rule);
+  }
+  .work-card__media .placeholder-tag {
+    font-family: var(--mono); font-size: 0.7rem;
+    color: oklch(100% 0 0 / 0.55);
+    text-transform: uppercase; letter-spacing: 0.12em;
+  }
+  .work-card__media--open .placeholder-tag { color: var(--ink-mute); }
+
+  .work-card__meta {
+    display: flex; justify-content: space-between; align-items: baseline;
+    margin-top: 1rem;
+    gap: 1rem;
+  }
+  .work-card__name {
+    font-family: var(--display); font-weight: 700;
+    font-size: var(--step-2); letter-spacing: -0.01em;
+  }
+  .work-card__desc {
+    color: var(--ink-soft);
+    margin: 0.25rem 0 0;
+    max-width: 38ch;
+  }
+  .work-card__tags {
+    margin-top: 0.6rem;
+    display: flex; flex-wrap: wrap; gap: 0.4rem;
+    font-family: var(--mono); font-size: 0.7rem;
+    color: var(--ink-mute);
+    text-transform: uppercase; letter-spacing: 0.1em;
+  }
+  .work-card__tags span::before { content: "/ "; }
+</style>

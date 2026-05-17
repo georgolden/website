@@ -1,0 +1,191 @@
+---
+import { t, type Lang } from '../i18n/translations';
+import LanguageSwitcher from '../islands/LanguageSwitcher';
+import ChatButton from '../islands/ChatButton';
+
+const lang = (Astro.currentLocale || 'en') as Lang;
+
+const links = [
+  { label: t(lang, 'nav.work'),  href: '/work/' },
+  { label: t(lang, 'nav.about'), href: '/about/' },
+];
+---
+
+<header class="nav">
+  <div class="shell nav__row">
+    <a href="/" class="logo" aria-label="GO Studio — home">GO Studio</a>
+
+    <nav class="nav__links" aria-label="Primary">
+      {links.map(l => <a href={l.href}>{l.label}</a>)}
+    </nav>
+
+    <div class="nav__tools">
+      <LanguageSwitcher client:load />
+      <ChatButton client:load label={t(lang, 'nav.chat')} />
+      <button class="hamburger" id="nav-hamburger" type="button" aria-label={t(lang, 'nav.menu')} aria-expanded="false" aria-controls="mobile-overlay">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 7h16M4 17h16"/></svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+<div class="mobile-overlay" id="mobile-overlay" aria-hidden="true">
+  <div class="mobile-panel" role="dialog" aria-label="Mobile navigation">
+    <nav>
+      {links.map(l => <a class="mobile-link" href={l.href}>{l.label}</a>)}
+    </nav>
+  </div>
+</div>
+
+<script>
+  const btn = document.getElementById('nav-hamburger');
+  const overlay = document.getElementById('mobile-overlay');
+  if (btn && overlay) {
+    const close = () => {
+      overlay.classList.remove('is-open');
+      overlay.setAttribute('aria-hidden', 'true');
+      btn.setAttribute('aria-expanded', 'false');
+      document.body.style.overflow = '';
+    };
+    const open = () => {
+      overlay.classList.add('is-open');
+      overlay.setAttribute('aria-hidden', 'false');
+      btn.setAttribute('aria-expanded', 'true');
+      document.body.style.overflow = 'hidden';
+    };
+    btn.addEventListener('click', () => {
+      overlay.classList.contains('is-open') ? close() : open();
+    });
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) close();
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && overlay.classList.contains('is-open')) close();
+    });
+  }
+</script>
+
+<style>
+  .nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 50;
+    background: transparent;
+    pointer-events: none;
+  }
+  .nav > * { pointer-events: auto; }
+  .nav__row {
+    display: flex; align-items: center; justify-content: space-between;
+    height: 64px;
+  }
+  .logo {
+    font-family: var(--display);
+    font-weight: 900;
+    font-size: 1.0625rem;
+    letter-spacing: -0.01em;
+  }
+  .logo::after { content: "."; color: var(--ink-mute); }
+
+  .nav__links { display: flex; gap: 2rem; }
+  .nav__links a {
+    font-size: var(--step-1);
+    color: var(--ink-soft);
+    transition: color 0.2s;
+  }
+  .nav__links a:hover { color: var(--ink); }
+
+  .nav__tools { display: flex; align-items: center; gap: 0.75rem; }
+
+  .hamburger { display: none; padding: 0.4rem; color: var(--ink); }
+
+  @media (max-width: 768px) {
+    .nav__links { display: none; }
+    .hamburger { display: inline-flex; }
+  }
+
+  /* Mobile overlay */
+  .mobile-overlay {
+    position: fixed; inset: 0;
+    z-index: 40;
+    background: rgba(0,0,0,0.4);
+    backdrop-filter: blur(4px);
+    display: flex; justify-content: flex-end;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.25s ease;
+  }
+  .mobile-overlay.is-open { opacity: 1; pointer-events: auto; }
+  .mobile-panel {
+    width: min(320px, 85vw);
+    height: 100%;
+    background: var(--bg);
+    padding: 88px var(--gutter) var(--gutter);
+    transform: translateX(100%);
+    transition: transform 0.3s ease-out;
+    overflow-y: auto;
+  }
+  .mobile-overlay.is-open .mobile-panel { transform: translateX(0); }
+  .mobile-panel nav { display: flex; flex-direction: column; gap: 4px; }
+  .mobile-link {
+    font-family: var(--display);
+    font-weight: 700;
+    font-size: 1.5rem;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--rule);
+    color: var(--ink);
+  }
+  @media (min-width: 769px) {
+    .mobile-overlay { display: none !important; }
+  }
+
+  /* Chat button (rendered by the Solid island) */
+  :global(.chat-btn) {
+    display: inline-flex; align-items: center; gap: 0.5rem;
+    padding: 0.55rem 0.95rem; border-radius: 999px;
+    background: var(--ink); color: var(--bg);
+    font-size: var(--step-1); font-weight: 500;
+  }
+  :global(.chat-btn__dot) {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--ink-mute);
+  }
+  :global(.chat-btn__dot.is-on) {
+    background: var(--green);
+    box-shadow: 0 0 0 0 oklch(72% 0.18 145 / 0.6);
+    animation: chatPulse 2s ease-out infinite;
+  }
+  @keyframes chatPulse {
+    0%   { box-shadow: 0 0 0 0 oklch(72% 0.18 145 / 0.55); }
+    100% { box-shadow: 0 0 0 8px oklch(72% 0.18 145 / 0); }
+  }
+
+  /* Language switcher (rendered by the Solid island) */
+  :global(.lang) { position: relative; }
+  :global(.lang__btn) {
+    display: inline-flex; align-items: center; gap: 0.4rem;
+    font-size: var(--step-1); color: var(--ink-soft);
+    padding: 0.4rem 0.6rem; border-radius: 999px;
+    transition: background 0.2s, color 0.2s;
+  }
+  :global(.lang__btn:hover) { background: var(--rule-soft); color: var(--ink); }
+  :global(.lang__menu) {
+    position: absolute; top: calc(100% + 4px); right: 0;
+    list-style: none; margin: 0; padding: 4px;
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    box-shadow: 0 8px 24px -12px oklch(15% 0.005 280 / 0.25);
+    min-width: 140px; z-index: 60;
+  }
+  :global(.lang__opt) {
+    display: block; width: 100%; text-align: left;
+    font-size: 0.875rem; padding: 8px 12px;
+    border-radius: 4px;
+    color: var(--ink);
+    transition: background 0.15s;
+  }
+  :global(.lang__opt:hover) { background: var(--rule-soft); }
+  :global(.lang__opt.is-active) { font-weight: 600; color: var(--ink); background: var(--rule-soft); }
+
+  @media (max-width: 768px) {
+    :global(.lang__btn span:last-child) { display: none; }
+    :global(.chat-btn__label) { display: none; }
+  }
+</style>

@@ -1,0 +1,110 @@
+---
+import { t, type Lang, languages } from '../i18n/translations';
+
+const lang = (Astro.currentLocale || 'en') as Lang;
+
+const services = [
+  { href: '/about/#websites', key: 'svc.01.title' },
+  { href: '/about/#hosting',  key: 'svc.02.title' },
+  { href: '/about/#seo',      key: 'svc.03.title' },
+  { href: '/about/#ai-web',   key: 'svc.04.title' },
+  { href: '/about/#mvp',      key: 'svc.05.title' },
+  { href: '/about/#product',  key: 'svc.06.title' },
+];
+
+const work = [
+  { href: '/work/resonance', label: 'Resonance Vision' },
+  { href: '/work/44pool',    label: '44pool' },
+  { href: '/work/',          label: t(lang, 'footer.work.all') },
+];
+---
+
+<footer class="footer">
+  <div class="shell">
+    <div class="footer__grid">
+      <div class="footer__brand">Built and operated.<br/>One studio, the full stack.</div>
+
+      <div class="footer__col">
+        <h4>{t(lang, 'footer.services')}</h4>
+        <ul>
+          {services.map(s => <li><a href={s.href}>{t(lang, s.key)}</a></li>)}
+        </ul>
+      </div>
+
+      <div class="footer__col">
+        <h4>{t(lang, 'footer.work')}</h4>
+        <ul>
+          {work.map(w => <li><a href={w.href}>{w.label}</a></li>)}
+        </ul>
+      </div>
+
+      <div class="footer__col">
+        <h4>{t(lang, 'footer.connect')}</h4>
+        <ul>
+          <li><a href="mailto:georgoldenb@gmail.com">{t(lang, 'footer.email')}</a></li>
+          <li><a href="https://github.com/georgolden" rel="me noopener" target="_blank">{t(lang, 'footer.github')}</a></li>
+          <li><a href="#" rel="me noopener">{t(lang, 'footer.linkedin')}</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="footer__bottom">
+      <div class="footer__langs">
+        {(Object.keys(languages)).map(l => (
+          <a href={l === 'en' ? '/' : `/${l}/`}>{l.toUpperCase()}</a>
+        ))}
+      </div>
+      <div>{t(lang, 'footer.copyright')}</div>
+    </div>
+  </div>
+</footer>
+
+<style>
+  .footer {
+    background: var(--bg-dark);
+    color: oklch(100% 0 0 / 0.65);
+    padding-block: 4rem 2.5rem;
+    border-top: 1px solid oklch(100% 0 0 / 0.08);
+  }
+  .footer__grid {
+    display: grid;
+    grid-template-columns: 2fr repeat(3, 1fr);
+    gap: 2.5rem;
+  }
+  .footer__brand {
+    font-family: var(--display); font-weight: 900;
+    font-size: clamp(1.5rem, 1.1rem + 1vw, 2rem);
+    color: var(--bg);
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+    max-width: 18ch;
+  }
+  .footer__col h4 {
+    margin: 0 0 1rem;
+    font-family: var(--mono); font-size: 0.7rem;
+    text-transform: uppercase; letter-spacing: 0.14em;
+    color: oklch(100% 0 0 / 0.4);
+    font-weight: 500;
+  }
+  .footer__col ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.55rem; }
+  .footer__col a { transition: color 0.2s; }
+  .footer__col a:hover { color: var(--bg); }
+
+  .footer__bottom {
+    margin-top: 3.5rem;
+    display: flex; justify-content: space-between; align-items: center;
+    gap: 1.5rem; flex-wrap: wrap;
+    padding-top: 1.5rem;
+    border-top: 1px solid oklch(100% 0 0 / 0.08);
+    font-family: var(--mono); font-size: 0.75rem;
+    color: oklch(100% 0 0 / 0.4);
+  }
+  .footer__langs { display: flex; flex-wrap: wrap; gap: 0.4rem 1rem; }
+  .footer__langs a { transition: color 0.2s; }
+  .footer__langs a:hover { color: var(--bg); }
+
+  @media (max-width: 720px) {
+    .footer__grid { grid-template-columns: 1fr 1fr; }
+    .footer__brand { grid-column: span 2; }
+  }
+</style>

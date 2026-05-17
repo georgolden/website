@@ -1,0 +1,73 @@
+---
+import AiInput from './AiInput.astro';
+
+export interface Props {
+  eyebrow: string;
+  title: string;
+  lede: string;
+  placeholder: string;
+  ariaLabel: string;
+  hints: string[];
+  inputVariant?: 'surface' | 'bg';
+}
+const { eyebrow, title, lede, placeholder, ariaLabel, hints, inputVariant = 'bg' } = Astro.props;
+---
+
+<div class="agent-card">
+  <p class="agent-card__eyebrow">{eyebrow}</p>
+  <h3 class="agent-card__title">{title}</h3>
+  <p class="agent-card__lede">{lede}</p>
+
+  <AiInput placeholder={placeholder} ariaLabel={ariaLabel} variant={inputVariant} />
+
+  <div class="agent-card__hints">
+    {hints.map(h => <button type="button">{h}</button>)}
+  </div>
+</div>
+
+<style>
+  .agent-card {
+    margin: 0 auto;
+    padding-block: clamp(3rem, 6vw, 5rem);
+    display: flex; flex-direction: column; align-items: center;
+    text-align: center;
+  }
+  .agent-card__eyebrow {
+    font-family: var(--mono); font-size: 0.75rem;
+    text-transform: uppercase; letter-spacing: 0.12em;
+    color: var(--ink-mute);
+    margin-bottom: 1rem;
+  }
+  .agent-card__title {
+    font-family: var(--display); font-weight: 900;
+    font-size: clamp(1.75rem, 1.3rem + 2vw, 3rem);
+    letter-spacing: -0.025em;
+    line-height: 1.02;
+    margin: 0 0 0.75rem;
+    max-width: 16ch;
+  }
+  .agent-card__lede {
+    font-size: clamp(1rem, 0.95rem + 0.2vw, 1.125rem);
+    color: var(--ink-soft);
+    line-height: 1.45;
+    max-width: 48ch;
+    margin: 0 0 clamp(3rem, 6vw, 5rem);
+  }
+  .agent-card__hints {
+    margin-top: 1rem;
+    display: flex; flex-wrap: wrap; gap: 0.5rem;
+    justify-content: center;
+  }
+  .agent-card__hints button {
+    border: 1px solid var(--rule);
+    padding: 0.45rem 0.95rem;
+    border-radius: 999px;
+    font-size: 0.85rem;
+    color: var(--ink-soft);
+    background: var(--bg);
+  }
+  .agent-card__hints button:hover {
+    border-color: var(--ink);
+    color: var(--ink);
+  }
+</style>

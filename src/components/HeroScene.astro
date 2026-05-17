@@ -1,0 +1,36 @@
+---
+// Drop your video file in application/public/ and update the <source> src below.
+---
+
+<div class="hero__scene">
+  <video
+    class="hero__video"
+    autoplay
+    muted
+    loop
+    playsinline
+    preload="metadata"
+  >
+    <source src="" type="video/mp4" />
+  </video>
+</div>
+
+<style>
+  .hero__scene {
+    position: relative;
+    width: 100%;
+    height: clamp(420px, 62dvh, 680px);
+    border-bottom: 1px solid var(--rule);
+    background: #000;
+    overflow: hidden;
+  }
+  @media (max-width: 720px) {
+    .hero__scene { height: clamp(360px, 52dvh, 480px); }
+  }
+  .hero__video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+</style>

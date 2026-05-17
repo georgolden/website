@@ -1,0 +1,178 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import WorkCard from '../../components/WorkCard.astro';
+import { t, type Lang } from '../../i18n/translations';
+
+const lang = (Astro.currentLocale || 'en') as Lang;
+
+const meta = [
+  { key: 'Live projects', val: '2 · operated' },
+  { key: 'Mode',          val: 'Built & run' },
+  { key: 'Span',          val: '2022 — present' },
+  { key: 'Availability',  val: '1 slot open' },
+];
+
+const work = [
+  {
+    href: '/work/resonance',
+    name: 'Resonance Vision',
+    description: 'Real-time trading platform. 20TB+ ingestion, custom analytics engine.',
+    tags: ['SaaS', 'Backend', 'Real-time'],
+    mediaLabel: '[ video loop · trading dashboard ]',
+    variant: 'lead' as const,
+  },
+  {
+    href: '/work/44pool',
+    name: '44pool',
+    description: 'Distributed mining pool. Worldwide infrastructure, multi-coin payouts.',
+    tags: ['Infrastructure', 'Backend', 'Distributed'],
+    mediaLabel: '[ video loop · mining pool ops ]',
+    variant: 'offset' as const,
+  },
+];
+---
+
+<BaseLayout
+  title="Work — GO Studio"
+  description="Selected work. Built and operated."
+  canonicalURL="/work/"
+>
+  <!-- Intro -->
+  <section class="intro">
+    <div class="shell">
+      <p class="intro__eyebrow">{t(lang, 'work.label')}</p>
+      <h1 class="intro__client">{t(lang, 'work.title')}</h1>
+
+      <div class="intro__body">
+        <dl class="intro__meta">
+          {meta.map(m => (
+            <div class="intro__meta-row">
+              <p class="intro__meta-key">{m.key}</p>
+              <p class="intro__meta-val">{m.val}</p>
+            </div>
+          ))}
+        </dl>
+        <div class="prose">
+          <p>Two systems live, both still operated by the studio. Each was built end to end — UI, backend, infra — and is updated on a weekly cadence. The open slot is the next one we take on.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Project pair -->
+  <section class="work-section">
+    <div class="shell">
+      <div class="work-grid work-grid--paired">
+        {work.map(w => <WorkCard {...w} />)}
+      </div>
+    </div>
+  </section>
+
+  <!-- Open slot -->
+  <section class="open-slot">
+    <div class="shell">
+      <div class="open-slot__row">
+        <div>
+          <p class="section-label">Open slot</p>
+          <h2 class="open-slot__title">{t(lang, 'work.openSlot.name')}</h2>
+          <p class="open-slot__desc">{t(lang, 'work.openSlot.desc')}</p>
+        </div>
+        <a href="/about/#agent" class="open-slot__link">Start the conversation →</a>
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .intro {
+    padding-top: clamp(8rem, 14vw, 13rem);
+    padding-bottom: clamp(2rem, 4vw, 3rem);
+  }
+  .intro__eyebrow {
+    font-family: var(--mono); font-size: 0.75rem;
+    text-transform: uppercase; letter-spacing: 0.14em;
+    color: var(--ink-mute);
+    margin: 0 0 clamp(2rem, 4vw, 3rem);
+  }
+  .intro__client {
+    font-family: var(--display); font-weight: 900;
+    font-size: clamp(1.75rem, 1.2rem + 2.5vw, 3rem);
+    line-height: 0.98;
+    letter-spacing: -0.025em;
+    margin: 0; max-width: 22ch;
+  }
+  .intro__body {
+    margin-top: clamp(2rem, 4vw, 3rem);
+    display: grid;
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    gap: clamp(2rem, 4vw, 4rem);
+    align-items: start;
+    padding-top: clamp(1.5rem, 3vw, 2.25rem);
+    border-top: 1px solid var(--rule);
+  }
+  .intro__meta {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.25rem 1.5rem;
+    margin: 0;
+  }
+  .intro__meta-row { display: block; }
+  .intro__meta-key {
+    font-family: var(--mono); font-size: 0.7rem;
+    text-transform: uppercase; letter-spacing: 0.14em;
+    color: var(--ink-mute);
+    margin: 0; padding-bottom: 0.25rem;
+  }
+  .intro__meta-val {
+    font-family: var(--display); font-weight: 700;
+    font-size: clamp(1.25rem, 1rem + 0.8vw, 1.75rem);
+    letter-spacing: -0.015em;
+    color: var(--ink);
+    margin: 0; line-height: 1.1;
+  }
+  @media (max-width: 720px) {
+    .intro__body { grid-template-columns: 1fr; padding-top: 2rem; }
+  }
+
+  .work-section {
+    padding-block: clamp(3rem, 6vw, 5rem) clamp(4rem, 7vw, 7rem);
+    border-top: 1px solid var(--rule);
+  }
+
+  /* .work-grid--paired animation is defined globally in pages/index.astro */
+
+  .open-slot {
+    padding-block: clamp(3rem, 5vw, 4rem) clamp(5rem, 9vw, 8rem);
+    border-top: 1px solid var(--rule);
+  }
+  .open-slot__row {
+    display: grid;
+    grid-template-columns: minmax(0, 7fr) minmax(0, 3fr);
+    gap: clamp(1.5rem, 3vw, 3rem);
+    align-items: end;
+  }
+  .open-slot__title {
+    font-family: var(--display); font-weight: 700;
+    font-size: clamp(1.5rem, 1.1rem + 1.8vw, 2.5rem);
+    letter-spacing: -0.018em;
+    line-height: 1.08;
+    margin: 0.4rem 0 0.75rem;
+    max-width: 22ch;
+  }
+  .open-slot__desc {
+    margin: 0;
+    color: var(--ink-soft);
+    max-width: 50ch;
+  }
+  .open-slot__link {
+    font-size: var(--step-1);
+    border-bottom: 1px solid var(--ink);
+    padding-bottom: 2px;
+    white-space: nowrap;
+    justify-self: end;
+  }
+  @media (max-width: 720px) {
+    .open-slot__row { grid-template-columns: 1fr; align-items: start; }
+    .open-slot__link { justify-self: start; }
+  }
+</style>

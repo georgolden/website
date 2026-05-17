@@ -1,0 +1,46 @@
+---
+export interface Props {
+  placeholder: string;
+  ariaLabel: string;
+  variant?: 'surface' | 'bg';
+}
+const { placeholder, ariaLabel, variant = 'surface' } = Astro.props;
+---
+
+<form class={`ai-input ai-input--${variant}`} onsubmit="event.preventDefault()">
+  <input type="text" placeholder={placeholder} aria-label={ariaLabel} />
+  <button class="ai-send" type="submit" aria-label="Send">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+  </button>
+</form>
+
+<style>
+  .ai-input {
+    display: flex; align-items: center;
+    border: 1px solid var(--rule);
+    border-radius: 14px;
+    padding: 0.35rem 0.35rem 0.35rem 1.1rem;
+    max-width: 560px;
+    width: 100%;
+  }
+  .ai-input--surface {
+    background: var(--surface);
+    box-shadow:
+      0 1px 0 var(--rule-soft),
+      0 18px 40px -28px oklch(15% 0.005 280 / 0.45);
+  }
+  .ai-input--bg { background: var(--bg); }
+  .ai-input input {
+    flex: 1; min-width: 0;
+    border: 0; outline: 0; background: transparent;
+    font: inherit; color: inherit;
+    padding: 0.7rem 0.5rem;
+  }
+  .ai-input input::placeholder { color: var(--ink-mute); }
+  .ai-send {
+    flex: none;
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 38px; height: 38px; border-radius: 10px;
+    background: var(--ink); color: var(--bg);
+  }
+</style>

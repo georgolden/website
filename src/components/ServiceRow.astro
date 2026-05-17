@@ -1,0 +1,63 @@
+---
+export interface Props {
+  num: string;
+  title: string;
+  copy: string;
+  capabilities: string[];
+  href: string;
+}
+const { num, title, copy, capabilities, href } = Astro.props;
+---
+
+<a class="service-row" href={href}>
+  <span class="service-row__num">{num}</span>
+  <h3 class="service-row__title">{title}</h3>
+  <div>
+    <p class="service-row__copy">{copy}</p>
+    <div class="service-row__capabilities">
+      {capabilities.map(c => <span>{c}</span>)}
+    </div>
+  </div>
+</a>
+
+<style>
+  .service-row {
+    display: grid;
+    grid-template-columns: 6rem minmax(0, 1.1fr) minmax(0, 1fr);
+    gap: clamp(1rem, 3vw, 3rem);
+    align-items: start;
+    padding-block: clamp(2rem, 4vw, 3rem);
+    border-top: 1px solid var(--rule);
+  }
+  .service-row__num {
+    font-family: var(--mono); font-size: 0.75rem;
+    color: var(--ink-mute);
+    padding-top: 0.5rem;
+  }
+  .service-row__title {
+    font-family: var(--display); font-weight: 700;
+    font-size: clamp(1.5rem, 1.1rem + 1.5vw, 2.25rem);
+    letter-spacing: -0.02em;
+    margin: 0; line-height: 1.05;
+  }
+  .service-row__copy {
+    color: var(--ink-soft);
+    margin: 0;
+    max-width: 50ch;
+  }
+  .service-row__capabilities {
+    margin-top: 1rem;
+    display: flex; flex-wrap: wrap; gap: 0.4rem 1rem;
+    font-family: var(--mono); font-size: 0.75rem;
+    color: var(--ink-mute);
+  }
+  .service-row:hover .service-row__title {
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 6px;
+  }
+  @media (max-width: 720px) {
+    .service-row { grid-template-columns: 1fr; gap: 0.75rem; }
+    .service-row__num { padding-top: 0; }
+  }
+</style>

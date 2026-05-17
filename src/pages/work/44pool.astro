@@ -1,0 +1,223 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import AgentCard from '../../components/AgentCard.astro';
+import { t, type Lang } from '../../i18n/translations';
+import '../../styles/case.css';
+
+const lang = (Astro.currentLocale || 'en') as Lang;
+
+const meta = [
+  { key: t(lang, 'case.meta.year'),     val: '2022 — present' },
+  { key: t(lang, 'case.meta.industry'), val: 'Mining · Infrastructure' },
+  { key: 'Miners',                       val: '10,000+ workers' },
+  { key: 'Coverage',                     val: '5 regions, 3 coins' },
+];
+
+const stats = [
+  { key: 'Edge latency',         val: '<100ms' },
+  { key: 'Maintenance windows',  val: 'Zero' },
+  { key: 'Distribution',         val: '5 regions' },
+  { key: 'Deployment',           val: 'Hot, auto-scaled' },
+];
+
+const hints = [
+  'How is share latency measured?',
+  'What about region failover?',
+  'Could you build a pool for me?',
+  'Margins on a small pool?',
+];
+---
+
+<BaseLayout
+  title="44pool — Case study · GO Studio"
+  description="Distributed mining pool. Five regions, sub-100ms, paid daily."
+  canonicalURL="/work/44pool/"
+>
+  <section class="intro">
+    <div class="shell">
+      <p class="intro__eyebrow">{t(lang, 'case.client')}</p>
+      <h1 class="intro__client">44pool</h1>
+
+      <div class="intro__body">
+        <dl class="intro__meta">
+          {meta.map(m => (
+            <div class="intro__meta-row">
+              <p class="intro__meta-key">{m.key}</p>
+              <p class="intro__meta-val">{m.val}</p>
+            </div>
+          ))}
+        </dl>
+
+        <div class="prose">
+          <p>44pool is a distributed mining pool. Worldwide stratum endpoints, multi-coin payouts, an ops surface tight enough for a single operator to run.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="challenge">
+    <div class="shell">
+      <p class="section-label">{t(lang, 'case.challenge')}</p>
+      <h2 class="challenge__title">Five regions, <em>sub-100ms</em>, paid daily — with one operator on the pager.</h2>
+      <div class="prose">
+        <p>Stratum servers close to every miner, share validation under a hundred milliseconds, payouts that survive reorgs. Same uptime budget as a bank, run by one person.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="showcase">
+    <div class="shell showcase__inner">
+      <p class="showcase__label">{t(lang, 'case.inMotion')}</p>
+      <figure class="showcase__video">
+        <div class="showcase__video-bar"><i></i><i></i><i></i></div>
+        <div class="ph">[ Pool dashboard capture · 16:9 video loop ]</div>
+      </figure>
+      <div class="showcase__phones">
+        <div class="phone showcase__m1"><div class="ph">[ Worker stats ]</div></div>
+        <div class="phone showcase__m2"><div class="ph">[ Payout history ]</div></div>
+        <div class="phone showcase__m3"><div class="ph">[ Hashrate live ]</div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="done">
+    <div class="shell">
+      <div class="done__grid">
+        <div>
+          <p class="section-label">{t(lang, 'case.whatDone')}</p>
+          <h2 class="section-title">Built solo, end to end.</h2>
+        </div>
+        <div class="prose">
+          <p>Stratum endpoints in five regions, share validator, block-template fan-out, payout engine, miner dashboard. Built and still operated by one person.</p>
+          <p>The whole system stays online while it's updated. Capacity follows demand. Miners don't notice the work happening behind it.</p>
+        </div>
+      </div>
+
+      <dl class="stats">
+        {stats.map(s => (
+          <div>
+            <p class="stat-key">{s.key}</p>
+            <p class="stat-val">{s.val}</p>
+          </div>
+        ))}
+      </dl>
+
+      <div class="diagram" aria-label="Architecture diagram">
+        <svg viewBox="0 0 1200 440" fill="none" stroke="currentColor" stroke-width="1"
+             font-family="ui-monospace, JetBrains Mono, monospace" font-size="11"
+             preserveAspectRatio="xMidYMid meet">
+          <defs>
+            <marker id="arr44" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+              <path d="M0 0 L10 5 L0 10 z" fill="currentColor" stroke="none"/>
+            </marker>
+          </defs>
+
+          <text x="20" y="22" fill="currentColor" stroke="none" letter-spacing="2" opacity="0.45">MINERS</text>
+          <text x="640" y="22" fill="currentColor" stroke="none" letter-spacing="2" opacity="0.45" text-anchor="middle">POOL</text>
+          <text x="1040" y="22" fill="currentColor" stroke="none" letter-spacing="2" opacity="0.45" text-anchor="middle">PAYOUTS · BLOCKCHAIN</text>
+
+          <g stroke-width="1.4">
+            <circle cx="40" cy="80"  r="6"/><path d="M40 86v16"/>
+            <circle cx="90" cy="120" r="6"/><path d="M90 126v16"/>
+            <circle cx="40" cy="160" r="6"/><path d="M40 166v16"/>
+            <circle cx="90" cy="200" r="6"/><path d="M90 206v16"/>
+            <circle cx="40" cy="240" r="6"/><path d="M40 246v16"/>
+            <circle cx="90" cy="280" r="6"/><path d="M90 286v16"/>
+            <circle cx="40" cy="320" r="6"/><path d="M40 326v16"/>
+            <circle cx="90" cy="360" r="6"/><path d="M90 366v16"/>
+          </g>
+          <text x="20" y="410" fill="currentColor" stroke="none" opacity="0.7">10,000+ workers</text>
+
+          <g stroke-dasharray="5 5" opacity="0.45">
+            <path d="M150 110 C 260 110, 320 200, 460 200"/>
+            <path d="M150 180 C 260 180, 320 220, 460 220"/>
+            <path d="M150 260 C 260 260, 320 240, 460 240"/>
+            <path d="M150 340 C 260 340, 320 260, 460 260"/>
+          </g>
+          <text x="270" y="140" fill="currentColor" stroke="none" opacity="0.55">hashrate →</text>
+
+          <rect x="460" y="160" width="360" height="84" rx="6"/>
+          <text x="640" y="196" fill="currentColor" stroke="none" letter-spacing="2" text-anchor="middle">POOL INFRA</text>
+          <text x="640" y="220" fill="currentColor" stroke="none" opacity="0.55" text-anchor="middle">stratum · share validation · templates</text>
+
+          <rect x="460" y="280" width="360" height="84" rx="6"/>
+          <text x="640" y="316" fill="currentColor" stroke="none" letter-spacing="2" text-anchor="middle">PAYOUT ENGINE</text>
+          <text x="640" y="340" fill="currentColor" stroke="none" opacity="0.55" text-anchor="middle">reorg-safe · daily, multi-coin</text>
+
+          <path d="M640 244 V 276" marker-end="url(#arr44)"/>
+          <path d="M820 322 H 916" stroke-dasharray="5 5" marker-end="url(#arr44)"/>
+
+          <rect x="920" y="280" width="240" height="84" rx="6"/>
+          <text x="1040" y="316" fill="currentColor" stroke="none" letter-spacing="2" text-anchor="middle">BLOCKCHAIN</text>
+          <text x="1040" y="340" fill="currentColor" stroke="none" opacity="0.55" text-anchor="middle">network broadcast</text>
+
+          <g>
+            <rect x="920"  y="80" width="70" height="44" rx="4"/>
+            <text x="955"  y="107" fill="currentColor" stroke="none" text-anchor="middle">BTC</text>
+            <rect x="1005" y="80" width="70" height="44" rx="4"/>
+            <text x="1040" y="107" fill="currentColor" stroke="none" text-anchor="middle">LTC</text>
+            <rect x="1090" y="80" width="70" height="44" rx="4"/>
+            <text x="1125" y="107" fill="currentColor" stroke="none" text-anchor="middle">DOGE</text>
+          </g>
+          <text x="920" y="60" fill="currentColor" stroke="none" opacity="0.55">← rewards</text>
+
+          <g stroke-dasharray="5 5" opacity="0.45">
+            <path d="M955  280 V 124"/>
+            <path d="M1040 280 V 124"/>
+            <path d="M1125 280 V 124"/>
+          </g>
+        </svg>
+
+        <div class="diagram__mobile">
+          <div class="dnode">Miners<small>10,000+ workers</small></div>
+          <div class="dpipe">hashrate ↓</div>
+          <div class="dnode">Pool infra<small>stratum · share validation · templates</small></div>
+          <div class="dpipe">↓</div>
+          <div class="dnode">Payout engine<small>reorg-safe · daily, multi-coin</small></div>
+          <div class="dpipe">↓</div>
+          <div class="dnode">Blockchain<small>network broadcast</small></div>
+          <div class="dpipe">rewards ↑</div>
+          <div class="dgrid dgrid--3">
+            <span>BTC</span><span>LTC</span><span>DOGE</span>
+          </div>
+        </div>
+      </div>
+
+      <p class="done__caption">Miners send shares → pool validates → payout engine settles → blockchain broadcasts → rewards flow back</p>
+    </div>
+  </section>
+
+  <section class="agent">
+    <div class="agent__motif" aria-hidden="true">
+      <svg viewBox="0 0 1440 600" fill="none" stroke="currentColor" stroke-width="1" preserveAspectRatio="xMidYMid slice">
+        <path d="M-100,520 C200,460 360,560 600,500 C840,440 980,540 1200,470 C1380,415 1500,460 1600,440"/>
+        <path d="M-100,460 C200,400 380,500 620,440 C860,380 1000,480 1220,410 C1390,355 1500,400 1600,380"/>
+        <path d="M-100,400 C200,340 400,440 640,380 C880,320 1020,420 1240,350 C1400,295 1500,340 1600,320"/>
+        <path d="M-100,340 C200,280 420,380 660,320 C900,260 1040,360 1260,290 C1410,235 1500,280 1600,260"/>
+        <path d="M-100,280 C200,220 440,320 680,260 C920,200 1060,300 1280,230 C1420,175 1500,220 1600,200"/>
+        <path d="M-100,220 C200,160 460,260 700,200 C940,140 1080,240 1300,170 C1430,115 1500,160 1600,140"/>
+        <path d="M-100,160 C200,100 480,200 720,140 C960,80 1100,180 1320,110 C1440,55 1500,100 1600,80"/>
+        <path d="M-100,100 C200,40 500,140 740,80 C980,20 1120,120 1340,50 C1450,-5 1500,40 1600,20"/>
+      </svg>
+    </div>
+    <div class="shell">
+      <AgentCard
+        eyebrow="Project agent · 44pool"
+        title="Ask anything."
+        lede="It has the architecture, the constraints, the timeline. It can also talk about building something similar for your business."
+        placeholder="How do payouts handle reorgs?"
+        ariaLabel="Ask the project agent"
+        hints={hints}
+        inputVariant="surface"
+      />
+    </div>
+  </section>
+
+  <section class="next">
+    <a href="/work/resonance">
+      <p class="next__eyebrow">{t(lang, 'case.next')} — 02 / 02</p>
+      <h2 class="next__title">Resonance Vision →</h2>
+      <span class="next__arrow">Real-time trading platform · 20,000+ traders</span>
+    </a>
+  </section>
+</BaseLayout>
