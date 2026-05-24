@@ -1,6 +1,6 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import HeroScene from '../components/HeroScene.astro';
+import HeroScene from '../islands/HeroScene3D';
 import WorkCard from '../components/WorkCard.astro';
 import ServiceRow from '../components/ServiceRow.astro';
 import AgentCard from '../components/AgentCard.astro';
@@ -64,8 +64,8 @@ const gapUs = ['Websites and SaaS UI', 'Backend infrastructure we own', 'AI wove
   description="Websites, SaaS platforms, backend infrastructure, AI agents. One studio."
 >
   <!-- HERO -->
+    <HeroScene  client:only="react" />
   <section class="hero">
-    <HeroScene />
     <div class="hero__content shell">
       <h1 class="hero__title">{t(lang, 'hero.title')}</h1>
       <p class="hero__sub">{t(lang, 'hero.sub')}</p>

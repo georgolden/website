@@ -1,4 +1,5 @@
 // @ts-check
+import react from '@astrojs/react';
 import { defineConfig } from 'astro/config';
 import solidJs from '@astrojs/solid-js';
 import sitemap from '@astrojs/sitemap';
@@ -9,15 +10,15 @@ import sitemap from '@astrojs/sitemap';
 const hmrHost = process.env.HMR_HOST;
 const hmr = hmrHost
   ? {
-      host: hmrHost,
-      protocol: 'wss',
-      clientPort: Number(process.env.HMR_CLIENT_PORT) || 443,
-    }
+    host: hmrHost,
+    protocol: 'wss',
+    clientPort: Number(process.env.HMR_CLIENT_PORT) || 443,
+  }
   : undefined;
 
 export default defineConfig({
   site: 'https://gostudio.dev',
-  integrations: [solidJs(), sitemap()],
+  integrations: [solidJs({ exclude: ['**/islands/Hero*'] }), sitemap(), react({ include: ['**/islands/Hero*'] })],
   // Bind to all interfaces. Default `[::1]` is IPv6-only, so the HMR
   // WebSocket fails when the browser resolves `localhost` to IPv4 — and
   // it also breaks tunneling tools (cloudflared, ngrok) which connect
