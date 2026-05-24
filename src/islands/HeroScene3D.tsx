@@ -1,17 +1,17 @@
 import { useRef, useMemo } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
-import { useGLTF, MeshTransmissionMaterial, Float, Sparkles } from "@react-three/drei";
+import { useGLTF, MeshTransmissionMaterial, Float, Sparkles, Environment } from "@react-three/drei";
 import { EffectComposer, Bloom } from "@react-three/postprocessing";
 import * as THREE from "three";
 
-const COLOR_BG     = "#111112";
-const COLOR_CYAN   = "#7fffd4";
+const COLOR_BG = "#111112";
+const COLOR_CYAN = "#7fffd4";
 const FONT_DISPLAY = "'Satoshi','Switzer',system-ui,sans-serif";
-const FONT_SANS    = "'Switzer',system-ui,sans-serif";
-const FONT_MONO    = "ui-monospace,'JetBrains Mono',Menlo,monospace";
-const COLOR_INK    = "#f7f7f6";
-const COLOR_MUTE   = "rgba(247,247,246,0.45)";
-const COLOR_GREEN  = "#5ec97b";
+const FONT_SANS = "'Switzer',system-ui,sans-serif";
+const FONT_MONO = "ui-monospace,'JetBrains Mono',Menlo,monospace";
+const COLOR_INK = "#f7f7f6";
+const COLOR_MUTE = "rgba(247,247,246,0.45)";
+const COLOR_GREEN = "#5ec97b";
 
 /* different Z-spin speeds per mesh — tweak freely */
 const SPIN_SPEEDS = [
@@ -23,53 +23,103 @@ const SPIN_SPEEDS = [
 /* ── asset ── */
 function HoloSphere({ mouse }: { mouse: React.MutableRefObject<{ x: number; y: number }> }) {
   const { scene } = useGLTF("/hero-asset.glb");
-  const groupRef  = useRef<THREE.Group>(null!);
+  const groupRef = useRef<THREE.Group>(null!);
 
-  const meshes = useMemo(() => {
+  const [meshes, lights, staticMeshes] = useMemo(() => {
     const acc: THREE.Mesh[] = [];
+    const staticMeshes: THREE.Mesh[] = [];
+    const lights: THREE.Light[] = [];
     scene.traverse((obj) => {
+      if ((obj as THREE.Light).isLight) {
+        const light = obj as THREE.Light;
+        lights.push(light);
+      }
       if ((obj as THREE.Mesh).isMesh) {
         const mesh = obj as THREE.Mesh;
-const hue = (180 + Math.random() * 120) % 360;
-        const col = new THREE.Color(`hsl(${hue}, 90%, 72%)`);
-        mesh.material = new THREE.MeshStandardMaterial({
-          color: col,
-          emissive: col,
-          emissiveIntensity: 20.2,
-          roughness: 0,
-          metalness: 0,
-          side: THREE.DoubleSide,
-        });
+        if (mesh.name.includes('glow')) {
+          const hue = (180 + Math.random() * 120) % 360;
+          const col = new THREE.Color(`hsl(${hue}, 90%, 72%)`);
+          mesh.material = new THREE.MeshStandardMaterial({
+            color: col,
+            emissive: col,
+            emissiveIntensity: 8.2,
+            roughness: 0,
+            metalness: 0,
+            side: THREE.DoubleSide,
+          });
+        } else if (mesh.name.includes('surface')) {
+          console.log(mesh.material);
+          const material = mesh.material as THREE.MeshStandardMaterial;
+          // material.emissiveIntensity = 1;
+          // material.emissiveMap = material.map;
+          // material.emissive = new THREE.Color('hsl(0, 100%, 100%)');
+          material.side = THREE.DoubleSide;
+        } else {
+          staticMeshes.push(mesh);
+          return;
+        }
         acc.push(mesh);
       }
     });
-    return acc;
+    return [acc, lights, staticMeshes];
   }, [scene]);
+
+  const DEPTH_FACTORS = [1.0, 0.55, 0.3, 0.75, 0.15];
+  const { positionDepthMap, basePositions } = useMemo(() => {
+    const positionDepthMap = new Map<string, number>();
+    const basePositions = meshes.map(mesh => mesh.position.clone());
+
+    meshes.forEach((mesh) => {
+      const key = `${mesh.position.x.toFixed(1)},${mesh.position.y.toFixed(1)},${mesh.position.z.toFixed(1)}`;
+      if (!positionDepthMap.has(key)) {
+        positionDepthMap.set(key, 0.1 + Math.random() * 0.9);
+      }
+    });
+
+    return { positionDepthMap, basePositions };
+  }, [meshes]);
 
   useFrame(() => {
     if (!groupRef.current) return;
 
-    /* gentle mouse tilt on the whole group */
-groupRef.current.rotation.x += (-Math.PI / 2 + mouse.current.y * 0.6 - groupRef.current.rotation.x) * 0.05;
-groupRef.current.rotation.z += (mouse.current.x * -0.6 - 0.15 - groupRef.current.rotation.z) * 0.05;
+    // Gentle mouse tilt on the whole group (unchanged)
+    groupRef.current.rotation.x += (mouse.current.y * 0.5 - groupRef.current.rotation.x) * 0.05;
+    groupRef.current.rotation.y += (mouse.current.x * 0.6 - 0.15 - groupRef.current.rotation.y) * 0.05;
 
-    /* spin each mesh on its own local Z only */
     meshes.forEach((mesh, i) => {
-      mesh.rotation.y += SPIN_SPEEDS[i % SPIN_SPEEDS.length] * 0.25;
+      const base = basePositions[i];
+      const key = `${base.x.toFixed(1)},${base.y.toFixed(1)},${base.z.toFixed(1)}`;
+      const depth = positionDepthMap.get(key) ?? 0.5;
+
+      const targetX = base.x + mouse.current.x * depth * 0.4;
+      const targetY = base.y + mouse.current.y * depth * 0.3;
+
+      mesh.position.x += (targetX - mesh.position.x) * 0.56;
+      mesh.position.y += (targetY - mesh.position.y) * 0.56;
     });
   });
 
-return (
+  return (
     <Float speed={1.0} rotationIntensity={0} floatIntensity={0.35}>
       {/*
         -90° on X tips the model from "lying flat / rings facing up"
         to "rings facing the camera"
       */}
-      <group ref={groupRef} position={[2, 0, 0]} scale={0.65} rotation={[0, 0, 0]}>
-        {meshes.map((mesh, i) => (
-          <primitive key={i} object={mesh} />
-        ))}
+      <group position={[2, 0, 0]} scale={0.65} >
+        <group ref={groupRef} rotation={[0, 0, 0]}>
+          {meshes.map((mesh, i) => (
+            <primitive key={i} object={mesh} />
+          ))}
+        </group>
+
+        {lights.map((light, i) => <primitive key={`light_${i}`} object={light} />)}
+        <group rotation={[0, 0, 0]}>
+          {staticMeshes.map((mesh, i) => (
+            <primitive key={`sm_${i}`} object={mesh} />
+          ))}
+        </group>
       </group>
+
     </Float>
   );
 
@@ -78,6 +128,7 @@ return (
 /* ── dust ── */
 function Dust() {
   const count = 500;
+
   const positions = useMemo(() => {
     const arr = new Float32Array(count * 3);
     for (let i = 0; i < count; i++) {
@@ -88,50 +139,88 @@ function Dust() {
     return arr;
   }, []);
 
-  const mat = useMemo(() => new THREE.ShaderMaterial({
-    uniforms: { 
-      uTime: { value: 0 },
-      uColor: { value: new THREE.Color('hsl(180, 100%, 50%)') },
-    },
-    vertexShader: `
-      uniform float uTime;
-      attribute float aOffset;
-      void main() {
-        vec3 pos = position;
-        pos.y += sin(uTime * 0.4 + aOffset) * 0.3;
-        pos.x += cos(uTime * 0.3 + aOffset) * 0.2;
-        gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
-        gl_PointSize = 1.5;
-      }
-    `,
-    fragmentShader: `
-      uniform vec3 uColor;
-      void main() {
-        float d = length(gl_PointCoord - 0.5);
-        if (d > 0.5) discard;
-        gl_FragColor = vec4(uColor * 10.0, 1.0 - d * 2.0);
-      }
-    `,
-    transparent: true,
-    depthWrite: false,
-  }), []);
-
   const offsets = useMemo(() => {
     const arr = new Float32Array(count);
     for (let i = 0; i < count; i++) arr[i] = Math.random() * Math.PI * 2;
     return arr;
   }, []);
 
+  const sizes = useMemo(() => {
+    const arr = new Float32Array(count);
+    for (let i = 0; i < count; i++) arr[i] = Math.random() * 2.5 + 0.5;
+    return arr;
+  }, []);
+
+  const hueOffsets = useMemo(() => {
+    const arr = new Float32Array(count);
+    for (let i = 0; i < count; i++) arr[i] = (Math.random() - 0.5) * (100 / 360);
+    return arr;
+  }, []);
+
+  const mat = useMemo(() => new THREE.ShaderMaterial({
+    uniforms: {
+      uTime: { value: 0 },
+      uBaseHue: { value: 0.7 }, // hsl(180, ...) = cyan
+    },
+    vertexShader: `
+      uniform float uTime;
+      attribute float aOffset;
+      attribute float aSize;
+      attribute float aHueOffset;
+      varying float vHueOffset;
+
+      void main() {
+        vec3 pos = position;
+        pos.y += sin(uTime * 0.4 + aOffset) * 0.3;
+        pos.x += cos(uTime * 0.3 + aOffset) * 0.2;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
+        gl_PointSize = aSize;
+        vHueOffset = aHueOffset;
+      }
+    `,
+    fragmentShader: `
+      uniform float uBaseHue;
+      varying float vHueOffset;
+
+      vec3 hsl2rgb(float h, float s, float l) {
+        float c = (1.0 - abs(2.0 * l - 1.0)) * s;
+        float x = c * (1.0 - abs(mod(h * 6.0, 2.0) - 1.0));
+        float m = l - c / 2.0;
+        vec3 rgb;
+        if (h < 1.0/6.0)      rgb = vec3(c, x, 0.0);
+        else if (h < 2.0/6.0) rgb = vec3(x, c, 0.0);
+        else if (h < 3.0/6.0) rgb = vec3(0.0, c, x);
+        else if (h < 4.0/6.0) rgb = vec3(0.0, x, c);
+        else if (h < 5.0/6.0) rgb = vec3(x, 0.0, c);
+        else                   rgb = vec3(c, 0.0, x);
+        return rgb + m;
+      }
+
+      void main() {
+        float d = length(gl_PointCoord - 0.5);
+        if (d > 0.5) discard;
+        float h = mod(uBaseHue + vHueOffset, 1.0);
+        vec3 col = hsl2rgb(h, 1.0, 0.6) * 10.0;
+        gl_FragColor = vec4(col, 1.0 - d * 2.0);
+      }
+    `,
+    transparent: true,
+    depthWrite: false,
+  }), []);
+
   const ref = useRef<THREE.Points>(null!);
+
   useFrame(({ clock }) => {
     mat.uniforms.uTime.value = clock.getElapsedTime();
   });
 
   return (
-    <points position={[2, 0, 0]} ref={ref} material={mat}>
+    <points position={[2, 0, -6]} ref={ref} material={mat}>
       <bufferGeometry>
         <bufferAttribute attach="attributes-position" args={[positions, 3]} />
         <bufferAttribute attach="attributes-aOffset" args={[offsets, 1]} />
+        <bufferAttribute attach="attributes-aSize" args={[sizes, 1]} />
+        <bufferAttribute attach="attributes-aHueOffset" args={[hueOffsets, 1]} />
       </bufferGeometry>
     </points>
   );
@@ -144,10 +233,10 @@ function Vignette() {
     const c = document.createElement("canvas");
     c.width = c.height = s;
     const ctx = c.getContext("2d")!;
-    const g = ctx.createRadialGradient(s/2, s/2, s*0.08, s/2, s/2, s*0.72);
-    g.addColorStop(0,    "rgba(17,17,18,0)");
+    const g = ctx.createRadialGradient(s / 2, s / 2, s * 0.08, s / 2, s / 2, s * 0.72);
+    g.addColorStop(0, "rgba(17,17,18,0)");
     g.addColorStop(0.45, "rgba(17,17,18,0.21)");
-    g.addColorStop(1,    "rgba(17,17,18,0.97)");
+    g.addColorStop(1, "rgba(17,17,18,0.97)");
     ctx.fillStyle = g;
     ctx.fillRect(0, 0, s, s);
     return new THREE.CanvasTexture(c);
@@ -171,7 +260,7 @@ function Lighting() {
   return (
     <>
       <ambientLight intensity={0.1} />
-      <pointLight position={[0, 0, 10]}   intensity={2.5} color={COLOR_CYAN} />
+      <pointLight position={[0, 0, 10]} intensity={2.5} color={COLOR_CYAN} />
       <pointLight ref={pulsRef} position={[-4, 3, -2]} intensity={2.0} color="#4488ff" />
       <pointLight position={[4, -3, -1]} intensity={1.2} color="#00ffcc" />
     </>
@@ -184,15 +273,15 @@ export default function HeroSection() {
 
   return (
     <section
-      style={{ position:"relative", width:"100%", height:"100vh", minHeight:600, background:COLOR_BG, overflow:"hidden" }}
+      style={{ position: "relative", width: "100%", height: "100vh", minHeight: 600, background: COLOR_BG, overflow: "hidden" }}
       onMouseMove={(e) => {
-        mouse.current.x =  (e.clientX / window.innerWidth  - 0.5) * 2;
+        mouse.current.x = (e.clientX / window.innerWidth - 0.5) * 2;
         mouse.current.y = -(e.clientY / window.innerHeight - 0.5) * 2;
       }}
     >
       <Canvas
-        camera={{ position:[0, 0, 7], fov:50 }}
-        style={{ position:"absolute", inset:0 }}
+        camera={{ position: [0, 0, 7], fov: 50 }}
+        style={{ position: "absolute", inset: 0 }}
         gl={{
           antialias: true,
           alpha: false,
@@ -205,10 +294,19 @@ export default function HeroSection() {
         <HoloSphere mouse={mouse} />
         <Vignette />
         <Dust />
+        <Environment
+          background={false}
+          environmentIntensity={1.0}
+          environmentRotation={[0, Math.PI / 2, 1.5]}
+          files={['px.png', 'nx.png', 'py.png', 'ny.png', 'pz.png', 'nz.png']}
+          path="/"
+          preset='forest'
+          scene={undefined} // adds the ability to pass a custom THREE.Scene, can also be a ref
+        />
 
         <EffectComposer>
           <Bloom
-            intensity={1.6}        /* strength of the glow */
+            intensity={1.5}        /* strength of the glow */
             luminanceThreshold={.9} /* only bright parts glow */
             luminanceSmoothing={0.8}
             mipmapBlur            /* smoother, less pixelated bloom */
@@ -218,39 +316,39 @@ export default function HeroSection() {
 
       {/* CSS vignette layer */}
       <div aria-hidden="true" style={{
-        position:"absolute", inset:0, pointerEvents:"none",
-        background:"radial-gradient(50% 50%, transparent 25.63%, rgba(17, 17, 18, 0.55) 87.39%, rgba(17, 17, 18, 0.96))"
+        position: "absolute", inset: 0, pointerEvents: "none",
+        background: "radial-gradient(50% 50%, transparent 25.63%, rgba(17, 17, 18, 0.55) 87.39%, rgba(17, 17, 18, 0.96))"
       }} />
 
       {/* text overlay */}
       <div style={{
-        position:"absolute", inset:0, display:"flex", flexDirection:"column",
-        justifyContent:"center", alignItems:"flex-start",
-        padding:"0 clamp(1.5rem,5vw,6rem)"
+        position: "absolute", inset: 0, display: "flex", flexDirection: "column",
+        justifyContent: "center", alignItems: "flex-start",
+        padding: "0 clamp(1.5rem,5vw,6rem)"
       }}>
-        <p style={{ fontFamily:FONT_MONO, fontSize:"0.72rem", textTransform:"uppercase", letterSpacing:"0.16em", color:COLOR_MUTE, margin:"0 0 1.4rem" }}>
-          <span style={{ color:COLOR_GREEN, marginRight:"0.5em" }}>●</span>
+        <p style={{ fontFamily: FONT_MONO, fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.16em", color: COLOR_MUTE, margin: "0 0 1.4rem" }}>
+          <span style={{ color: COLOR_GREEN, marginRight: "0.5em" }}>●</span>
           Full-stack AI studio
         </p>
 
-        <h1 style={{ fontFamily:FONT_DISPLAY, fontWeight:900, fontSize:"clamp(2.8rem,7vw,6.5rem)", lineHeight:1.02, letterSpacing:"-0.03em", color:COLOR_INK, margin:"0 0 1.4rem", maxWidth:"14ch" }}>
+        <h1 style={{ fontFamily: FONT_DISPLAY, fontWeight: 900, fontSize: "clamp(2.8rem,7vw,6.5rem)", lineHeight: 1.02, letterSpacing: "-0.03em", color: COLOR_INK, margin: "0 0 1.4rem", maxWidth: "14ch" }}>
           Full-stack systems,{" "}
-          <span style={{ color:"transparent", WebkitTextStroke:`1.5px ${COLOR_INK}`, opacity:0.6 }}>
+          <span style={{ color: "transparent", WebkitTextStroke: `1.5px ${COLOR_INK}`, opacity: 0.6 }}>
             built and operated
           </span>{" "}
           by AI.
         </h1>
 
-        <p style={{ fontFamily:FONT_SANS, fontSize:"clamp(1rem,1.6vw,1.2rem)", color:COLOR_MUTE, margin:"0 0 2.8rem", maxWidth:"42ch", lineHeight:1.6 }}>
+        <p style={{ fontFamily: FONT_SANS, fontSize: "clamp(1rem,1.6vw,1.2rem)", color: COLOR_MUTE, margin: "0 0 2.8rem", maxWidth: "42ch", lineHeight: 1.6 }}>
           Websites, SaaS platforms, backend infrastructure, AI agents.{" "}
-          <em style={{ fontStyle:"normal", color:COLOR_INK, opacity:0.8 }}>One studio.</em>
+          <em style={{ fontStyle: "normal", color: COLOR_INK, opacity: 0.8 }}>One studio.</em>
         </p>
 
-        <div style={{ display:"flex", gap:"1rem", flexWrap:"wrap" }}>
-          <a href="#work" style={{ fontFamily:FONT_SANS, fontWeight:600, fontSize:"0.9rem", background:COLOR_INK, color:COLOR_BG, padding:"0.65rem 1.4rem", borderRadius:"999px", textDecoration:"none" }}>
+        <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
+          <a href="#work" style={{ fontFamily: FONT_SANS, fontWeight: 600, fontSize: "0.9rem", background: COLOR_INK, color: COLOR_BG, padding: "0.65rem 1.4rem", borderRadius: "999px", textDecoration: "none" }}>
             View work →
           </a>
-          <a href="#contact" style={{ fontFamily:FONT_SANS, fontWeight:500, fontSize:"0.9rem", color:COLOR_MUTE, padding:"0.65rem 1.4rem", borderRadius:"999px", border:"1px solid rgba(247,247,246,0.18)", textDecoration:"none" }}>
+          <a href="#contact" style={{ fontFamily: FONT_SANS, fontWeight: 500, fontSize: "0.9rem", color: COLOR_MUTE, padding: "0.65rem 1.4rem", borderRadius: "999px", border: "1px solid rgba(247,247,246,0.18)", textDecoration: "none" }}>
             Start a conversation
           </a>
         </div>
