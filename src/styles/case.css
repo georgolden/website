@@ -4,6 +4,8 @@
   overflow: hidden;
   padding-top: clamp(8rem, 14vw, 13rem);
   padding-bottom: clamp(4rem, 7vw, 6rem);
+  isolation: isolate;
+  background: #000;
 }
 .intro__bg {
   position: absolute;
@@ -84,6 +86,7 @@
 .showcase {
   position: relative;
   overflow: hidden;
+  isolation: isolate;
   padding-block: clamp(2rem, 4vw, 3.5rem) clamp(3rem, 6vw, 5rem);
   border-top: 1px solid var(--rule);
 }

@@ -1,8 +1,7 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import AgentCard from '../../components/AgentCard.astro';
-import NavInverter from '../../islands/NavInverter';
-import ShowcaseCurves from '../../islands/ShowcaseCurves';
+import ShowcaseBg from '../../components/ShowcaseBg.astro';
 import { t, type Lang } from '../../i18n/translations';
 import '../../styles/case.css';
 
@@ -79,7 +78,7 @@ const hints = [
   </section>
 
   <section class="showcase">
-    <ShowcaseCurves client:load />
+    <ShowcaseBg />
     <div class="shell showcase__inner">
       <p class="showcase__label">{t(lang, 'case.inMotion')}</p>
       <figure class="showcase__video">
@@ -244,7 +243,33 @@ const hints = [
     </a>
   </section>
 
-  <NavInverter client:load />
+  <script is:inline>
+    (() => {
+      // Tear down any observer left over from a prior HMR pass or bfcache restore.
+      if (window.__navInverter) window.__navInverter.disconnect();
+      document.body.classList.remove('nav-white');
+
+      const state = new Map();
+      const recompute = () => {
+        let white = false;
+        for (const [el, visible] of state) {
+          if (visible && el.dataset.navTheme === 'white') { white = true; break; }
+        }
+        document.body.classList.toggle('nav-white', white);
+      };
+
+      const obs = new IntersectionObserver((entries) => {
+        for (const e of entries) state.set(e.target, e.isIntersecting);
+        recompute();
+      }, { rootMargin: '-65px 0px 0px 0px', threshold: 0 });
+
+      document.querySelectorAll('[data-nav-theme]').forEach((el) => obs.observe(el));
+      window.__navInverter = obs;
+
+      // Restore from bfcache shouldn't leave a stale nav theme.
+      window.addEventListener('pageshow', (e) => { if (e.persisted) recompute(); });
+    })();
+  </script>
 </BaseLayout>
 
 <style>

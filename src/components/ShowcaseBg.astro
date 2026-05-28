@@ -1,0 +1,77 @@
+<div class="sc-bg">
+  <div class="sc-orb sc-orb--1"></div>
+  <div class="sc-orb sc-orb--2"></div>
+  <div class="sc-orb sc-orb--3"></div>
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800"
+    preserveAspectRatio="xMidYMid slice" class="sc-svg">
+    <defs>
+      <filter id="sc-g">
+        <feGaussianBlur stdDeviation="2" result="a" />
+        <feGaussianBlur stdDeviation="6" result="b" />
+        <feMerge>
+          <feMergeNode in="b" />
+          <feMergeNode in="a" />
+          <feMergeNode in="SourceGraphic" />
+        </feMerge>
+      </filter>
+    </defs>
+    <path fill="none" stroke="#864AFF" stroke-width="2" filter="url(#sc-g)"
+      d="M 440 -50 C 360 250, 540 500, 430 850" />
+    <path fill="none" stroke="#CAC3F7" stroke-width="0.5" opacity="0.4"
+      d="M 425 -50 C 345 250, 525 500, 415 850" />
+    <path fill="none" stroke="#FF3355" stroke-width="2" filter="url(#sc-g)"
+      d="M 600 -50 C 680 200, 520 550, 610 850" />
+    <path fill="none" stroke="#8A38F5" stroke-width="2" filter="url(#sc-g)"
+      d="M 760 -50 C 680 280, 840 480, 750 850" />
+    <path fill="none" stroke="#DBC1FD" stroke-width="0.5" opacity="0.4"
+      d="M 775 -50 C 695 280, 855 480, 765 850" />
+    <path fill="none" stroke="#A197DD" stroke-width="1" opacity="0.4"
+      filter="url(#sc-g)">
+      <animate attributeName="d"
+        values="M -50 240 Q 350 190, 650 260 T 1250 220;M -50 270 Q 350 310, 650 230 T 1250 280;M -50 240 Q 350 190, 650 260 T 1250 220"
+        dur="14s" repeatCount="indefinite" />
+    </path>
+    <path fill="none" stroke="#CAC3F7" stroke-width="0.7" opacity="0.3"
+      filter="url(#sc-g)">
+      <animate attributeName="d"
+        values="M -50 560 Q 350 610, 650 540 T 1250 580;M -50 530 Q 350 490, 650 570 T 1250 520;M -50 560 Q 350 610, 650 540 T 1250 580"
+        dur="16s" repeatCount="indefinite" />
+    </path>
+  </svg>
+</div>
+
+<style>
+  .sc-bg {
+    position: absolute; inset: 0; z-index: 0;
+    pointer-events: none; background: #EDE9FE;
+    overflow: hidden;
+    contain: layout paint;
+  }
+  .sc-orb {
+    position: absolute;
+    filter: blur(clamp(12px, 2vw, 28px));
+    animation: sc-orb 5s ease-in-out infinite;
+  }
+  .sc-orb--1 {
+    top: 52%; left: 4%;
+    width: clamp(180px, 22vw, 360px); height: clamp(180px, 22vw, 360px);
+    background: radial-gradient(circle, #FF3355bb 0%, #FF335544 35%, transparent 70%);
+  }
+  .sc-orb--2 {
+    top: 24%; right: 10%; animation-duration: 6s; animation-delay: 2s;
+    width: clamp(160px, 20vw, 340px); height: clamp(160px, 20vw, 340px);
+    background: radial-gradient(circle, #8A38F5aa 0%, #8A38F544 40%, transparent 70%);
+  }
+  .sc-orb--3 {
+    top: 74%; left: 20%; animation-duration: 7s; animation-delay: 4s;
+    width: clamp(140px, 18vw, 300px); height: clamp(140px, 18vw, 300px);
+    background: radial-gradient(circle, #864AFFbb 0%, #864AFF44 40%, transparent 70%);
+  }
+  .sc-svg {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+  }
+  @keyframes sc-orb {
+    0%, 100% { opacity: 0.8; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.2); }
+  }
+</style>
