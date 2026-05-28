@@ -6,6 +6,11 @@ import sitemap from '@astrojs/sitemap';
 export default defineConfig({
   site: 'https://gostudio.dev',
   integrations: [solidJs(), sitemap()],
+  vite: {
+    server: {
+      allowedHosts: ['georgoldenburger.com'],
+    },
+  },
   i18n: {
     defaultLocale: 'en',
     locales: ['en', 'de', 'et', 'fi', 'sv', 'fr', 'it', 'uk', 'ru'],
