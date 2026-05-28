@@ -119,3 +119,61 @@ const any = [...state.values()].some(Boolean);
 ### 10. `.mp4` videos go in `public/`, not project root
 
 **Rule:** Astro serves static assets from `public/` at root URL path. Files at project root are not accessible via URL. Move to `public/video/` → accessible at `/video/filename.mp4`.
+
+### 11. `client:only` triggers hidden iframe preload during SPA nav — use `client:load`
+
+**Mistake:** Used `client:only="solid-js"` to fix SSR double-render. During Astro client-side navigation, `prepareForClientOnlyComponents` creates a hidden iframe that fetches the target page again, triggering Vite dep re-optimization and loading a second Solid instance.
+
+**Rule:** Always use `client:load` for Solid islands in multi-page apps. `client:only` is for truly client-only pages (no SSR at all), not for individual islands.
+
+### 12. Vite must dedupe `solid-js` to prevent double instances during SPA nav
+
+**Mistake:** During Astro client-side navigation, Vite can resolve `solid-js` to two different module instances (different URL paths) — causing "multiple instances of Solid" and "computations created outside createRoot" errors.
+
+**Rule:** Always add `resolve.dedupe: ['solid-js']` in `astro.config.mjs`:
+
+```js
+// astro.config.mjs
+export default defineConfig({
+  vite: {
+    resolve: {
+      dedupe: ['solid-js'],
+    },
+  },
+});
+```
+
+### 13. Pre-include Solid in `optimizeDeps` or Vite re-bundles mid-session
+
+**Mistake:** Dedupe alone isn't enough. When the first navigation pulls in a Solid sub-import Vite hasn't seen yet (e.g. `solid-js/store` from a newly-loaded island), Vite re-runs dep optimization, ships a new `?v=` hash for the chunk, and the browser now holds two Solid copies for the rest of the session. Symptom: "multiple instances of Solid" appears on the *second* page visit, not the first.
+
+**Rule:** Eagerly include every Solid entry in `optimizeDeps.include` so Vite pre-bundles all of them on cold start and never re-optimizes mid-session:
+
+```js
+vite: {
+  optimizeDeps: {
+    include: ['solid-js', 'solid-js/web', 'solid-js/store', 'solid-js/h'],
+  },
+  resolve: { dedupe: ['solid-js', 'solid-js/web', 'solid-js/store'] },
+}
+```
+
+### 14. Sections with media backgrounds need an opaque fallback color
+
+**Mistake:** `.intro` relied entirely on an absolutely-positioned `<video>` for its background. If the video failed to autoplay (browser policy after navigation), failed to decode, or hydration errored out before the video element mounted, the section became transparent and visually inherited the *next* section's background — looking like sibling content had "bled in".
+
+**Rule:** Any section with `position: relative; overflow: hidden` whose only visual fill is an absolute child (video, canvas, SVG bg) must also set an explicit `background:` matching the intended dominant tone. Add `isolation: isolate` so the absolute child's stacking context can never escape upward.
+
+### 15. Dev server behind a reverse proxy needs explicit HMR host
+
+**Mistake:** `vite dev` defaulted HMR to `wss://<page-host>` with the dev server port, so when the page was served via `https://georgoldenburger.com → localhost:3001`, the browser tried `wss://georgoldenburger.com/` (no TLS on that vhost path) and `wss://localhost:3001/` (different origin, blocked). Repeated reconnect storms caused HMR to swap module versions partway through, which is one of the triggers for the multi-Solid problem.
+
+**Rule:** When serving the dev server through a reverse proxy, set `server.hmr.host` and `server.hmr.clientPort` to the *public* host/port. Gate it behind env vars so direct `localhost:3001` access still works:
+
+```js
+const hmr = process.env.HMR_HOST
+  ? { host: process.env.HMR_HOST, protocol: 'wss', clientPort: Number(process.env.HMR_CLIENT_PORT) || 443 }
+  : undefined;
+```
+
+Run as `HMR_HOST=georgoldenburger.com npm run dev`.
