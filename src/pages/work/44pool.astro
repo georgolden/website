@@ -1,6 +1,8 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import AgentCard from '../../components/AgentCard.astro';
+import NavInverter from '../../islands/NavInverter';
+import ShowcaseCurves from '../../islands/ShowcaseCurves';
 import { t, type Lang } from '../../i18n/translations';
 import '../../styles/case.css';
 
@@ -33,7 +35,18 @@ const hints = [
   description="Distributed mining pool. Five regions, sub-100ms, paid daily."
   canonicalURL="/work/44pool/"
 >
-  <section class="intro">
+  <section class="intro" data-nav-theme="white">
+    <video
+      class="intro__bg"
+      autoplay
+      muted
+      loop
+      playsinline
+      preload="metadata"
+      aria-hidden="true"
+    >
+      <source src="/video/44pool_hero.mp4" type="video/mp4" />
+    </video>
     <div class="shell">
       <p class="intro__eyebrow">{t(lang, 'case.client')}</p>
       <h1 class="intro__client">44pool</h1>
@@ -66,16 +79,26 @@ const hints = [
   </section>
 
   <section class="showcase">
+    <ShowcaseCurves client:load />
     <div class="shell showcase__inner">
       <p class="showcase__label">{t(lang, 'case.inMotion')}</p>
       <figure class="showcase__video">
         <div class="showcase__video-bar"><i></i><i></i><i></i></div>
-        <div class="ph">[ Pool dashboard capture · 16:9 video loop ]</div>
+        <video
+          class="showcase__video-el"
+          autoplay
+          muted
+          loop
+          playsinline
+          preload="metadata"
+        >
+          <source src="/video/44pool_desktop.mp4" type="video/mp4" />
+        </video>
       </figure>
       <div class="showcase__phones">
-        <div class="phone showcase__m1"><div class="ph">[ Worker stats ]</div></div>
-        <div class="phone showcase__m2"><div class="ph">[ Payout history ]</div></div>
-        <div class="phone showcase__m3"><div class="ph">[ Hashrate live ]</div></div>
+        <div class="phone showcase__m1"><img src="/images/44pool_hash.png" alt="Hashrate live" style="width:100%;height:100%;object-fit:cover;border-radius:18px;display:block" /></div>
+        <div class="phone showcase__m2"><img src="/images/44pool_history.png" alt="Payout history" style="width:100%;height:100%;object-fit:cover;border-radius:18px;display:block" /></div>
+        <div class="phone showcase__m3"><img src="/images/44pool_workers.png" alt="Worker stats" style="width:100%;height:100%;object-fit:cover;border-radius:18px;display:block" /></div>
       </div>
     </div>
   </section>
@@ -213,11 +236,25 @@ const hints = [
     </div>
   </section>
 
-  <section class="next">
+  <section class="next" data-nav-theme="white">
     <a href="/work/resonance">
       <p class="next__eyebrow">{t(lang, 'case.next')} — 02 / 02</p>
       <h2 class="next__title">Resonance Vision →</h2>
       <span class="next__arrow">Real-time trading platform · 20,000+ traders</span>
     </a>
   </section>
+
+  <NavInverter client:load />
 </BaseLayout>
+
+<style>
+  .intro .intro__eyebrow,
+  .intro .intro__client,
+  .intro .intro__meta-key,
+  .intro .intro__meta-val,
+  .intro .prose,
+  .intro .prose p { color: #fff; }
+  .intro .intro__eyebrow,
+  .intro .intro__meta-key { color: oklch(100% 0 0 / 0.55); }
+  .intro .intro__body { border-top-color: oklch(100% 0 0 / 0.12); }
+</style>
