@@ -1,453 +1,383 @@
-import { useRef, useMemo, useEffect } from "react";
+import { useRef, useMemo } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { useGLTF, MeshTransmissionMaterial, Float, Sparkles, Environment } from "@react-three/drei";
-import { EffectComposer, Bloom } from "@react-three/postprocessing";
+import { EffectComposer, N8AO, SMAA } from "@react-three/postprocessing";
 import * as THREE from "three";
 
+// ─── design tokens ────────────────────────────────────────────────────────────
 const COLOR_BG = "#111112";
-const COLOR_CYAN = "#7fffd4";
-const FONT_DISPLAY = "'Satoshi','Switzer',system-ui,sans-serif";
-const FONT_SANS = "'Switzer',system-ui,sans-serif";
-const FONT_MONO = "ui-monospace,'JetBrains Mono',Menlo,monospace";
 const COLOR_INK = "#f7f7f6";
 const COLOR_MUTE = "rgba(247,247,246,0.45)";
 const COLOR_GREEN = "#5ec97b";
+const FONT_DISPLAY = "'Satoshi','Switzer',system-ui,sans-serif";
+const FONT_SANS = "'Switzer',system-ui,sans-serif";
+const FONT_MONO = "ui-monospace,'JetBrains Mono',Menlo,monospace";
 
-/* different Z-spin speeds per mesh — tweak freely */
-const SPIN_SPEEDS = [
-  0.008, -0.005, 0.012, -0.009, 0.006,
-  -0.014, 0.010, -0.007, 0.016, -0.011,
-  0.009, -0.013, 0.011,
+// ─── grid ─────────────────────────────────────────────────────────────────────
+const COLS = 124;
+const ROWS = 124;
+const CUBE_SIZE = 0.5;    // width/depth of each cube face
+const GAP = 0.03;   // gap between cubes
+const STEP = CUBE_SIZE + GAP;
+
+// resting noise height range — cubes already varied like in the reference
+const NOISE_MIN = -0.3;
+const NOISE_MAX = 2.4;
+
+// ─── mouse extrude ────────────────────────────────────────────────────────────
+const M_RADIUS = 1.5;
+const M_MAX = 2.0;    // extra height on top of noise
+const M_FALLOFF = 1.8;
+const LERP = 0.3;
+
+// ─── idle pulse (line sweeps) ─────────────────────────────────────────────────
+const PULSE_W = 2.8;   // band width in world units
+const PULSE_H = 2.2;   // extra extrude height
+const PULSE_SPD_MIN = 2.0;
+const PULSE_SPD_MAX = 3.8;
+const PULSE_FADE = 1.5;
+const PULSE_INT_MIN = 1.2;
+const PULSE_INT_MAX = 3.5;
+const PULSE_MAX = 3;
+
+const GW = (COLS - 1) * STEP;
+const GH = (ROWS - 1) * STEP;
+
+// ─── noise ────────────────────────────────────────────────────────────────────
+function h(x, y) {
+  const n = Math.sin(x * 127.1 + y * 311.7) * 43758.5453;
+  return n - Math.floor(n);
+}
+function sn(x, y) {
+  const ix = Math.floor(x), iy = Math.floor(y);
+  const fx = x - ix, fy = y - iy;
+  const ux = fx * fx * (3 - 2 * fx), uy = fy * fy * (3 - 2 * fy);
+  return h(ix, iy) + (h(ix + 1, iy) - h(ix, iy)) * ux + (h(ix, iy + 1) - h(ix, iy)) * uy
+    + (h(ix + 1, iy + 1) - h(ix + 1, iy) - h(ix, iy + 1) + h(ix, iy)) * ux * uy;
+}
+function fbm(x, y) {
+  return sn(x, y) * 0.5 + sn(x * 2.1, y * 2.1) * 0.25 + sn(x * 4.2, y * 4.2) * 0.125;
+}
+
+// ─── pulse factory ───────────────────────────────────────────────────────────
+const DIRS = [
+  { dx: 1, dy: 0 }, { dx: -1, dy: 0 },
+  { dx: 0, dy: 1 }, { dx: 0, dy: -1 },
+  { dx: 1, dy: 0.3 }, { dx: -1, dy: 0.3 },
 ];
-
-/* ── asset ── */
-function HoloSphere({ mouse }: { mouse: React.MutableRefObject<{ x: number; y: number }> }) {
-  const { scene } = useGLTF("/hero-asset.glb");
-  const groupRef = useRef<THREE.Group>(null!);
-
-  const [meshes, lights, staticMeshes] = useMemo(() => {
-    const acc: THREE.Mesh[] = [];
-    const staticMeshes: THREE.Mesh[] = [];
-    const lights: THREE.Light[] = [];
-    scene.traverse((obj) => {
-      if ((obj as THREE.Light).isLight) {
-        const light = obj as THREE.Light;
-        lights.push(light);
-      }
-      if ((obj as THREE.Mesh).isMesh) {
-        const mesh = obj as THREE.Mesh;
-        if (mesh.name.includes('glow')) {
-          const hue = (180 + Math.random() * 120) % 360;
-          const col = new THREE.Color(`hsl(${hue}, 90%, 72%)`);
-          mesh.material = new THREE.MeshStandardMaterial({
-            color: col,
-            emissive: col,
-            emissiveIntensity: 3.2,
-            roughness: 0,
-            metalness: 0,
-            side: THREE.DoubleSide,
-          });
-        } else if (mesh.name.includes('surface')) {
-          console.log(mesh.material);
-          const material = mesh.material as THREE.MeshStandardMaterial;
-          // material.emissiveIntensity = 1;
-          // material.emissiveMap = material.map;
-          // material.emissive = new THREE.Color('hsl(0, 100%, 100%)');
-          material.side = THREE.DoubleSide;
-        } else {
-          staticMeshes.push(mesh);
-          return;
-        }
-        acc.push(mesh);
-      }
-    });
-    return [acc, lights, staticMeshes];
-  }, [scene]);
-
-  const DEPTH_FACTORS = [1.0, 0.55, 0.3, 0.75, 0.15];
-  const { positionDepthMap, basePositions } = useMemo(() => {
-    const positionDepthMap = new Map<string, number>();
-    const basePositions = meshes.map(mesh => mesh.position.clone());
-
-    meshes.forEach((mesh) => {
-      const key = `${mesh.position.x.toFixed(1)},${mesh.position.y.toFixed(1)},${mesh.position.z.toFixed(1)}`;
-      if (!positionDepthMap.has(key)) {
-        positionDepthMap.set(key, 0.1 + Math.random() * 0.9);
-      }
-    });
-
-    return { positionDepthMap, basePositions };
-  }, [meshes]);
-
-  useFrame(() => {
-    if (!groupRef.current) return;
-
-    // Gentle mouse tilt on the whole group (unchanged)
-    groupRef.current.rotation.x += (mouse.current.y * 0.5 - groupRef.current.rotation.x) * 0.05;
-    groupRef.current.rotation.y += (mouse.current.x * 0.6 - 0.15 - groupRef.current.rotation.y) * 0.05;
-
-    meshes.forEach((mesh, i) => {
-      const base = basePositions[i];
-      const key = `${base.x.toFixed(1)},${base.y.toFixed(1)},${base.z.toFixed(1)}`;
-      const depth = positionDepthMap.get(key) ?? 0.5;
-
-      const targetX = base.x + mouse.current.x * depth * 0.4;
-      const targetY = base.y + mouse.current.y * depth * 0.3;
-
-      mesh.position.x += (targetX - mesh.position.x) * 0.56;
-      mesh.position.y += (targetY - mesh.position.y) * 0.56;
-    });
-  });
-
-  return (
-    <Float speed={1.0} rotationIntensity={0} floatIntensity={0.35}>
-      {/*
-        -90° on X tips the model from "lying flat / rings facing up"
-        to "rings facing the camera"
-      */}
-      <group position={[2, 0, 0]} scale={0.65} >
-        <group ref={groupRef} rotation={[0, 0, 0]}>
-          {meshes.map((mesh, i) => (
-            <primitive key={i} object={mesh} />
-          ))}
-        </group>
-
-        {lights.map((light, i) => <primitive key={`light_${i}`} object={light} />)}
-        <group rotation={[0, 0, 0]}>
-          {staticMeshes.map((mesh, i) => (
-            <primitive key={`sm_${i}`} object={mesh} />
-          ))}
-        </group>
-      </group>
-
-    </Float>
-  );
-
+function mkPulse() {
+  const raw = DIRS[Math.floor(Math.random() * DIRS.length)];
+  const len = Math.sqrt(raw.dx * raw.dx + raw.dy * raw.dy);
+  const dx = raw.dx / len, dy = raw.dy / len;
+  const speed = PULSE_SPD_MIN + Math.random() * (PULSE_SPD_MAX - PULSE_SPD_MIN);
+  const hw = GW / 2 + PULSE_W * 2, hh = GH / 2 + PULSE_W * 2;
+  let sx, sy;
+  if (Math.abs(dx) > Math.abs(dy)) {
+    sx = dx > 0 ? -hw : hw; sy = (Math.random() - 0.5) * GH;
+  } else {
+    sx = (Math.random() - 0.5) * GW; sy = dy > 0 ? -hh : hh;
+  }
+  const travel = Math.sqrt((GW + PULSE_W * 6) ** 2 + (GH + PULSE_W * 6) ** 2);
+  return { x: sx, y: sy, dx, dy, speed, elapsed: 0, duration: travel / speed, alive: true };
 }
 
-/* ── dust ── */
-function Dust({ speed = 2.3 }: { speed?: number }) {
-  const count = 500;
-  const { scene } = useThree();
-  const chipWorldPos = useRef(new THREE.Vector3());
+// ─── colors ───────────────────────────────────────────────────────────────────
+// reference is white/light-grey — we do dark navy version
+const C_BASE = new THREE.Color("#d8e8f5");   // cool near-white for cube tops
+const C_SIDE = new THREE.Color("#9ab8d4");   // slightly darker for sides
+const C_HIGH = new THREE.Color("#ffffff");   // peak highlight
 
-  // Each particle = 2 triangles = 6 vertices
-  const vertsPerParticle = 6;
-  const total = count * vertsPerParticle;
+// ─── main grid component ──────────────────────────────────────────────────────
+function CubeGrid({ mouseNDC }) {
+  const ref = useRef();
+  const { camera } = useThree();
+  const count = COLS * ROWS;
 
+  const currH = useRef(new Float32Array(count));
+  const targH = useRef(new Float32Array(count));
+  const pulses = useRef([]);
+  const nextPt = useRef(0.5);
 
-  const directions = useMemo(() => {
-    const arr = new Float32Array(count * 2);
+  const { pos, noiseH, noiseCol } = useMemo(() => {
+    const pos = new Float32Array(count * 4);
+    const noiseH = new Float32Array(count);
+    const noiseCol = new Float32Array(count);
+    const ox = (COLS - 1) * STEP / 2, oy = (ROWS - 1) * STEP / 2;
+    for (let r = 0; r < ROWS; r++) {
+      for (let c = 0; c < COLS; c++) {
+        const i = r * COLS + c;
+        pos[i * 2] = c * STEP - ox;
+        pos[i * 2 + 1] = r * STEP - oy;
+        const f = fbm(c * 0.22, r * 0.22);
+        noiseH[i] = NOISE_MIN + f * (NOISE_MAX - NOISE_MIN);
+        noiseCol[i] = fbm(c * 0.41 + 7, r * 0.41 + 3); // separate noise for color variation
+      }
+    }
+    // init current heights to noise so it starts looking like the reference
+    for (let i = 0; i < count; i++) currH.current[i] = noiseH[i];
+    return { pos, noiseH, noiseCol };
+  }, []);
+
+  const dummy = useMemo(() => new THREE.Object3D(), []);
+  const colTmp = useMemo(() => new THREE.Color(), []);
+
+  const plane = useMemo(() => new THREE.Plane(new THREE.Vector3(0, 0, 1), 0), []);
+  const ray = useMemo(() => new THREE.Raycaster(), []);
+  const hit = useMemo(() => new THREE.Vector3(), []);
+  const mWorld = useRef(new THREE.Vector2(99999, 99999));
+
+  useFrame(({ delta }) => {
+    // unproject mouse
+    ray.setFromCamera(mouseNDC.current, camera);
+    if (ray.ray.intersectPlane(plane, hit)) {
+      mWorld.current.set(hit.x, hit.y);
+    }
+
+    const mesh = ref.current;
+    if (!mesh) return;
+
+    // pulse lifecycle
+    nextPt.current -= delta;
+    const alive = pulses.current.filter(p => p.alive);
+    if (nextPt.current <= 0 && alive.length < PULSE_MAX) {
+      pulses.current.push(mkPulse());
+      nextPt.current = PULSE_INT_MIN + Math.random() * (PULSE_INT_MAX - PULSE_INT_MIN);
+    }
+    for (const p of alive) {
+      p.elapsed += delta;
+      p.x += p.dx * p.speed * delta;
+      p.y += p.dy * p.speed * delta;
+      if (p.elapsed >= p.duration) p.alive = false;
+    }
+    if (pulses.current.length > 40) pulses.current = pulses.current.filter(p => p.alive);
+    const ap = pulses.current.filter(p => p.alive);
+
+    const mx = mWorld.current.x, my = mWorld.current.y;
+
     for (let i = 0; i < count; i++) {
-      const theta = Math.random() * Math.PI * 2;
-      const x = Math.cos(theta);
-      const y = Math.sin(theta) * 0.2; // 👈 squish Y — lower = less up/down
-      const len = Math.sqrt(x * x + y * y);
-      arr[i * 2 + 0] = x / len;
-      arr[i * 2 + 1] = y / len;
+      const px = pos[i * 2], py = pos[i * 2 + 1];
+
+      // mouse bump
+      const ddx = px - mx, ddy = py - my;
+      const md = Math.sqrt(ddx * ddx + ddy * ddy);
+      const mProx = Math.max(0, 1 - md / M_RADIUS);
+      const mH = Math.pow(mProx, M_FALLOFF) * M_MAX;
+
+      // pulse bumps
+      let pH = 0;
+      for (const p of ap) {
+        const rx = px - p.x, ry = py - p.y;
+        const along = rx * p.dx + ry * p.dy;
+        const perp = Math.abs(rx * (-p.dy) + ry * p.dx);
+        if (Math.abs(along) > PULSE_W) continue;
+        const profile = Math.cos((along / PULSE_W) * Math.PI * 0.5);
+        const soft = Math.max(0, 1 - perp / (GW * 0.5));
+        const fi = Math.min(1, p.elapsed / PULSE_FADE);
+        const fo = Math.min(1, (p.duration - p.elapsed) / PULSE_FADE);
+        pH += profile * soft * fi * fo * PULSE_H;
+      }
+
+      // target = noise base + mouse + pulse
+      targH.current[i] = noiseH[i] + mH + pH;
+      currH.current[i] += (targH.current[i] - currH.current[i]) * LERP;
+      const ch = currH.current[i];
+
+      // position + scale — cube base at z=0, top at z=ch
+      dummy.position.set(px, py, ch * 0.5);
+      dummy.scale.set(1, 1, Math.max(0.01, ch) / CUBE_SIZE);
+      dummy.updateMatrix();
+      mesh.setMatrixAt(i, dummy.matrix);
+
+      // color: top faces brightened by height + mouse proximity
+      const heightT = Math.min(1, (ch - NOISE_MIN) / (M_MAX + PULSE_H));
+      const mT = Math.pow(Math.max(0, 1 - md / M_RADIUS), 2.0);
+      const pT = Math.min(1, pH / PULSE_H);
+      const t = Math.min(1, heightT * 0.4 + mT * 0.8 + pT * 0.6);
+      colTmp.copy(C_BASE).lerp(C_HIGH, t);
+      // darken short cubes slightly for depth
+      colTmp.multiplyScalar(0.72 + noiseCol[i] * 0.28 + t * 0.15);
+      mesh.setColorAt(i, colTmp);
     }
-    return arr;
-  }, []);
-  const timeOffsets = useMemo(() => {
-    const arr = new Float32Array(count);
-    for (let i = 0; i < count; i++) arr[i] = Math.random() * 5.0;
-    return arr;
-  }, []);
 
-  const sizes = useMemo(() => {
-    const arr = new Float32Array(count);
-    for (let i = 0; i < count; i++) arr[i] = Math.random() * 0.06 + 0.01;
-    return arr;
-  }, []);
-
-  const hueOffsets = useMemo(() => {
-    const arr = new Float32Array(count);
-    for (let i = 0; i < count; i++) arr[i] = (Math.random() - 0.5) * (100 / 360);
-    return arr;
-  }, []);
-
-  // Expand per-particle data to per-vertex (6 verts per particle)
-  const expand = (src: Float32Array, stride: number) => {
-    const dst = new Float32Array(count * vertsPerParticle * stride);
-    for (let i = 0; i < count; i++) {
-      for (let v = 0; v < vertsPerParticle; v++) {
-        for (let s = 0; s < stride; s++) {
-          dst[(i * vertsPerParticle + v) * stride + s] = src[i * stride + s];
-        }
-      }
-    }
-    return dst;
-  };
-
-  // quad UV corner indices — tells each vertex which corner it is
-  // quad layout: 2 tris = [0,1,2, 2,3,0] corners
-  const cornerIds = useMemo(() => {
-    const arr = new Float32Array(total);
-    const corners = [0, 1, 2, 2, 3, 0];
-    for (let i = 0; i < count; i++)
-      for (let v = 0; v < vertsPerParticle; v++)
-        arr[i * vertsPerParticle + v] = corners[v];
-    return arr;
-  }, []);
-
-  const dirExpanded = useMemo(() => expand(directions, 2), [directions]);
-  const timeOffsetExpanded = useMemo(() => expand(timeOffsets.map ? new Float32Array(timeOffsets) : timeOffsets, 1), [timeOffsets]);
-  const sizeExpanded = useMemo(() => expand(sizes, 1), [sizes]);
-  const hueExpanded = useMemo(() => expand(hueOffsets, 1), [hueOffsets]);
-
-  // dummy positions — actual positions computed in vertex shader
-  const dummyPos = useMemo(() => new Float32Array(total * 3), []);
-
-  const mat = useMemo(() => new THREE.ShaderMaterial({
-    uniforms: {
-      uTime: { value: 0 },
-      uSpeed: { value: speed },
-      uBaseHue: { value: 0.7 },
-      uOrigin: { value: new THREE.Vector3() },
-    },
-    vertexShader: `
-      uniform float uTime;
-      uniform float uSpeed;
-      uniform vec3  uOrigin;
-
-      attribute vec2  aDir;
-      attribute float aTimeOffset;
-      attribute float aSize;
-      attribute float aHueOffset;
-      attribute float aCorner;   // 0,1,2,3
-
-      varying float vAlpha;
-      varying float vHueOffset;
-      varying float vT; // 0 = tail, 1 = head (for fade)
-
-      void main() {
-        float lifetime = 2.0;
-        float t        = mod(uTime - aTimeOffset, lifetime);
-        float progress = t / lifetime;
-
-        // head and tail positions along fly direction
-        float trailLen = aSize * 15.0;
-        vec3 head = uOrigin + vec3(aDir, 0.0) * t * uSpeed;
-        vec3 tail = head    - vec3(aDir, 0.0) * trailLen;
-
-        // perpendicular for width
-        vec2 perp = vec2(-aDir.y, aDir.x) * aSize * 0.05;
-
-        // 4 corners of the quad:
-        // 0 = tail-left, 1 = tail-right, 2 = head-right, 3 = head-left
-        vec3 pos;
-        float localT; // 0 at tail, 1 at head
-        if (aCorner < 0.5) {
-          pos = tail + vec3(perp, 0.0);  localT = 0.0;
-        } else if (aCorner < 1.5) {
-          pos = tail - vec3(perp, 0.0);  localT = 0.0;
-        } else if (aCorner < 2.5) {
-          pos = head - vec3(perp, 0.0);  localT = 1.0;
-        } else {
-          pos = head + vec3(perp, 0.0);  localT = 1.0;
-        }
-
-        gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
-
-        float fadeIn  = smoothstep(0.0, 0.1, progress);
-        float fadeOut = 1.0 - smoothstep(0.6, 1.0, progress);
-        vAlpha     = fadeIn * fadeOut;
-        vHueOffset = aHueOffset;
-        vT         = localT;
-      }
-    `,
-    fragmentShader: `
-      uniform float uBaseHue;
-      varying float vAlpha;
-      varying float vHueOffset;
-      varying float vT;
-
-      vec3 hsl2rgb(float h, float s, float l) {
-        float c = (1.0 - abs(2.0 * l - 1.0)) * s;
-        float x = c * (1.0 - abs(mod(h * 6.0, 2.0) - 1.0));
-        float m = l - c / 2.0;
-        vec3 rgb;
-        if      (h < 1.0/6.0) rgb = vec3(c, x, 0.0);
-        else if (h < 2.0/6.0) rgb = vec3(x, c, 0.0);
-        else if (h < 3.0/6.0) rgb = vec3(0.0, c, x);
-        else if (h < 4.0/6.0) rgb = vec3(0.0, x, c);
-        else if (h < 5.0/6.0) rgb = vec3(x, 0.0, c);
-        else                   rgb = vec3(c, 0.0, x);
-        return rgb + m;
-      }
-
-      void main() {
-        float h = mod(uBaseHue + vHueOffset, 1.0);
-        vec3 col = hsl2rgb(h, 1.0, 0.6) * 10.0;
-
-        // tail fades to transparent, head stays bright
-        float trailFade = vT;
-        gl_FragColor = vec4(col, trailFade * vAlpha);
-      }
-    `,
-    transparent: true,
-    depthWrite: false,
-    side: THREE.DoubleSide,
-  }), []);
-
-  useEffect(() => {
-    mat.uniforms.uSpeed.value = speed;
-  }, [speed, mat]);
-
-  const ref = useRef<THREE.Mesh>(null!);
-
-  useFrame(({ clock }) => {
-    const chip = scene.getObjectByName('Chip');
-    if (chip) {
-      chip.getWorldPosition(chipWorldPos.current);
-      mat.uniforms.uOrigin.value.copy(chipWorldPos.current);
-    }
-    mat.uniforms.uTime.value = clock.getElapsedTime();
+    mesh.instanceMatrix.needsUpdate = true;
+    if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
   });
 
   return (
-    <mesh ref={ref} material={mat}>
-      <bufferGeometry>
-        <bufferAttribute attach="attributes-position" args={[dummyPos, 3]} />
-        <bufferAttribute attach="attributes-aDir" args={[dirExpanded, 2]} />
-        <bufferAttribute attach="attributes-aTimeOffset" args={[timeOffsetExpanded, 1]} />
-        <bufferAttribute attach="attributes-aSize" args={[sizeExpanded, 1]} />
-        <bufferAttribute attach="attributes-aHueOffset" args={[hueExpanded, 1]} />
-        <bufferAttribute attach="attributes-aCorner" args={[cornerIds, 1]} />
-      </bufferGeometry>
-    </mesh>
+    <instancedMesh
+      ref={ref}
+      args={[null, null, count]}
+      castShadow
+      receiveShadow
+      frustumCulled={false}
+    >
+      <boxGeometry args={[CUBE_SIZE, CUBE_SIZE, CUBE_SIZE]} />
+      <meshStandardMaterial roughness={0.3} metalness={0.05} />
+    </instancedMesh>
   );
 }
 
-/* ── vignette plane baked from canvas ── */
-function Vignette() {
-  const texture = useMemo(() => {
-    const s = 512;
-    const c = document.createElement("canvas");
-    c.width = c.height = s;
-    const ctx = c.getContext("2d")!;
-    const g = ctx.createRadialGradient(s / 2, s / 2, s * 0.08, s / 2, s / 2, s * 0.72);
-    g.addColorStop(0, "rgba(17,17,18,0)");
-    g.addColorStop(0.45, "rgba(17,17,18,0.21)");
-    g.addColorStop(1, "rgba(17,17,18,0.97)");
-    ctx.fillStyle = g;
-    ctx.fillRect(0, 0, s, s);
-    return new THREE.CanvasTexture(c);
-  }, []);
-
-  return (
-    <mesh position={[0, 0, 4.5]} renderOrder={10}>
-      <planeGeometry args={[28, 16]} />
-      <meshBasicMaterial map={texture} transparent depthWrite={false} />
-    </mesh>
-  );
-}
-
-/* ── lights (bright so bloom has fuel) ── */
-function Lighting() {
-  const pulsRef = useRef<THREE.PointLight>(null!);
-  useFrame(({ clock }) => {
-    if (pulsRef.current)
-      pulsRef.current.intensity = 2.0 + Math.sin(clock.getElapsedTime() * 1.2) * 0.5;
-  });
+// ─── scene setup ──────────────────────────────────────────────────────────────
+function Scene({ mouseNDC }) {
   return (
     <>
-      <ambientLight intensity={0.1} />
-      <pointLight position={[0, 0, 10]} intensity={2.5} color={COLOR_CYAN} />
-      <pointLight ref={pulsRef} position={[-4, 3, -2]} intensity={2.0} color="#4488ff" />
-      <pointLight position={[4, -3, -1]} intensity={1.2} color="#00ffcc" />
+      <ambientLight intensity={0.45} color="#eef4fa" />
+
+      <directionalLight
+        position={[-12, 12, 18]}
+        intensity={4}
+        color="#ffffff"
+        castShadow
+        shadow-mapSize-width={4096}
+        shadow-mapSize-height={4096}
+        shadow-camera-near={1}
+        shadow-camera-far={120}
+        shadow-camera-left={-40}
+        shadow-camera-right={40}
+        shadow-camera-top={40}
+        shadow-camera-bottom={-40}
+      />
+
+      <directionalLight
+        position={[12, 4, 8]}
+        intensity={0.8}
+        color="#dce9f5"
+      />
+
+      <directionalLight
+        position={[18, -10, 12]}
+        intensity={1.25}
+        color="#ffffff"
+      />
+
+      <CubeGrid mouseNDC={mouseNDC} />
+      <mesh receiveShadow position={[0, 0, -0.15]}>
+        <planeGeometry args={[300, 300]} />
+        <shadowMaterial opacity={0.18} />
+      </mesh>
+
     </>
   );
 }
 
-/* ── main export ── */
-export default function HeroSection() {
-  const mouse = useRef({ x: 0, y: 0 });
+
+// ─── root ─────────────────────────────────────────────────────────────────────
+export default function HeroSection({ className = "", style = {} }) {
+  const mouseNDC = useRef(new THREE.Vector2(99999, 99999));
 
   return (
     <section
-      style={{ position: "relative", width: "100%", height: "100vh", minHeight: 600, background: COLOR_BG, overflow: "hidden" }}
-      onMouseMove={(e) => {
-        mouse.current.x = (e.clientX / window.innerWidth - 0.5) * 2;
-        mouse.current.y = -(e.clientY / window.innerHeight - 0.5) * 2;
+      className={className}
+      style={{
+        position: "relative", width: "100%", height: "100vh",
+        minHeight: 600, background: "#e8eef4", overflow: "hidden",
+        ...style,
       }}
+      onMouseMove={(e) => {
+        mouseNDC.current.x = (e.clientX / window.innerWidth) * 2 - 1;
+        mouseNDC.current.y = -((e.clientY / window.innerHeight) * 2 - 1);
+      }}
+      onMouseLeave={() => mouseNDC.current.set(99999, 99999)}
     >
       <Canvas
-        camera={{ position: [0, 0, 7], fov: 50 }}
-        style={{ position: "absolute", inset: 0 }}
-        gl={{
-          antialias: true,
-          alpha: false,
-          toneMapping: THREE.ACESFilmicToneMapping,
-          toneMappingExposure: 1.2,
+        // angled camera like the reference — looking down at ~35°
+        camera={{
+          position: [
+            GH * 0.2,      // Move less negative for wider grid
+            -GH * 0.3,     // Adjust vertical angle  
+            GH * 0.35        // Pull camera back to see more
+          ],
+          fov: 48, up: [0.0, .0, 0.0]
         }}
-        dpr={[1, 1.5]}
-      >
-        <color attach="background" args={[COLOR_BG]} />
-        <HoloSphere mouse={mouse} />
-        <Vignette />
-        <Dust />
-        <Environment
-          background={false}
-          environmentIntensity={1.0}
-          environmentRotation={[0, Math.PI / 2, 1.5]}
-          files={['px.png', 'nx.png', 'py.png', 'ny.png', 'pz.png', 'nz.png']}
-          path="/"
-          preset='forest'
-          scene={undefined} // adds the ability to pass a custom THREE.Scene, can also be a ref
-        />
+        dpr={[1, 2]}
+        gl={{
+          antialias: true, alpha: false,
+          toneMapping: THREE.ACESFilmicToneMapping,
+          toneMappingExposure: 1.1,
+        }}
 
-        <EffectComposer>
-          <Bloom
-            intensity={1.3}        /* strength of the glow */
-            luminanceThreshold={.9} /* only bright parts glow */
-            luminanceSmoothing={0.8}
-            mipmapBlur            /* smoother, less pixelated bloom */
-          />
-        </EffectComposer>
+        onCreated={({ camera }) => camera.lookAt(0, 0, 0)}
+        style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }}
+      >
+
+        <color attach="background" args={["#e8eef4"]} />
+        <Scene mouseNDC={mouseNDC} />
+        <fog attach="fog" args={["#e8eef4", 25, 95]} />
+        <fog attach="fog" args={["#e8eef4", 15, 70]} />
       </Canvas>
 
-      {/* CSS vignette layer */}
+
+      {/* soft vignette to fade edges */}
       <div aria-hidden="true" style={{
         position: "absolute", inset: 0, pointerEvents: "none",
-        background: "radial-gradient(50% 50%, transparent 25.63%, rgba(17, 17, 18, 0.55) 87.39%, rgba(17, 17, 18, 0.96))"
+        background: "radial-gradient(70% 70% at 50% 50%, transparent 40%, rgba(232,238,244,0.5) 75%, rgba(232,238,244,0.95) 100%)",
       }} />
 
-      {/* text overlay */}
+      {/* text overlay — dark ink on light bg */}
       <div style={{
         position: "absolute", inset: 0, display: "flex", flexDirection: "column",
         justifyContent: "center", alignItems: "flex-start",
-        padding: "0 clamp(1.5rem,5vw,6rem)"
+        padding: "0 clamp(1.0rem,2vw,6rem)", pointerEvents: "none",
       }}>
-        <p style={{ fontFamily: FONT_MONO, fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.16em", color: COLOR_MUTE, margin: "0 0 1.4rem" }}>
-          <span style={{ color: COLOR_GREEN, marginRight: "0.5em" }}>●</span>
-          Full-stack AI studio
-        </p>
+        <div
+          style={{
+            background: "rgba(255, 255, 255, 0.75)",
+            padding: "100px 120px",
+            borderRadius: "18px",
 
-        <h1 style={{ fontFamily: FONT_DISPLAY, fontWeight: 900, fontSize: "clamp(2.8rem,7vw,6.5rem)", lineHeight: 1.02, letterSpacing: "-0.03em", color: COLOR_INK, margin: "0 0 1.4rem", maxWidth: "14ch" }}>
-          Full-stack systems,{" "}
-          <span style={{ color: "transparent", WebkitTextStroke: `1.5px ${COLOR_INK}`, opacity: 0.6 }}>
-            built and operated
-          </span>{" "}
-          by AI.
-        </h1>
+            border: "1px solid rgba(255,255,255,0.45)",
+            boxShadow: `
+      0 12px 40px rgba(13,31,45,0.08),
+      inset 0 1px 0 rgba(255,255,255,0.7)
+    `,
+            backdropFilter: "blur(2px)",
+            WebkitBackdropFilter: "blur(2px)",
+          }}
+        >
+          <p style={{
+            fontFamily: FONT_MONO, fontSize: "0.72rem", textTransform: "uppercase",
+            letterSpacing: "0.16em", color: "rgba(20,40,60,0.5)", margin: "0 0 1.4rem",
+          }}>
+            <span style={{ color: "#2a7a4a", marginRight: "0.5em" }}>●</span>
+            Full-stack AI studio
+          </p>
 
-        <p style={{ fontFamily: FONT_SANS, fontSize: "clamp(1rem,1.6vw,1.2rem)", color: COLOR_MUTE, margin: "0 0 2.8rem", maxWidth: "42ch", lineHeight: 1.6 }}>
-          Websites, SaaS platforms, backend infrastructure, AI agents.{" "}
-          <em style={{ fontStyle: "normal", color: COLOR_INK, opacity: 0.8 }}>One studio.</em>
-        </p>
+          <h1 style={{
+            fontFamily: FONT_DISPLAY, fontWeight: 900,
+            fontSize: "clamp(2.8rem,7vw,6.5rem)", lineHeight: 1.02,
+            letterSpacing: "-0.03em", color: "#0d1f2d",
+            margin: "0 0 1.4rem", maxWidth: "14ch",
+          }}>
+            Full-stack systems,{" "}
+            <span style={{ color: "transparent", WebkitTextStroke: "1.5px #0d1f2d", opacity: 0.45 }}>
+              built and operated
+            </span>{" "}
+            by AI.
+          </h1>
 
-        <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
-          <a href="#work" style={{ fontFamily: FONT_SANS, fontWeight: 600, fontSize: "0.9rem", background: COLOR_INK, color: COLOR_BG, padding: "0.65rem 1.4rem", borderRadius: "999px", textDecoration: "none" }}>
-            View work →
-          </a>
-          <a href="#contact" style={{ fontFamily: FONT_SANS, fontWeight: 500, fontSize: "0.9rem", color: COLOR_MUTE, padding: "0.65rem 1.4rem", borderRadius: "999px", border: "1px solid rgba(247,247,246,0.18)", textDecoration: "none" }}>
-            Start a conversation
-          </a>
+          <p style={{
+            fontFamily: FONT_SANS, fontSize: "clamp(1rem,1.6vw,1.2rem)",
+            color: "rgba(13,31,45,0.6)", margin: "0 0 2.8rem",
+            maxWidth: "42ch", lineHeight: 1.6,
+          }}>
+            Websites, SaaS platforms, backend infrastructure, AI agents.{" "}
+            <em style={{ fontStyle: "normal", color: "#0d1f2d", opacity: 0.85 }}>One studio.</em>
+          </p>
+
+          <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap", pointerEvents: "auto" }}>
+            <a href="#work" style={{
+              fontFamily: FONT_SANS, fontWeight: 600, fontSize: "0.9rem",
+              background: "#0d1f2d", color: "#f7f7f6",
+              padding: "0.65rem 1.4rem", borderRadius: "999px", textDecoration: "none",
+            }}>View work →</a>
+            <a href="#contact" style={{
+              fontFamily: FONT_SANS, fontWeight: 500, fontSize: "0.9rem",
+              color: "rgba(13,31,45,0.6)", padding: "0.65rem 1.4rem", borderRadius: "999px",
+              border: "1px solid rgba(13,31,45,0.2)", textDecoration: "none",
+            }}>Start a conversation</a>
+          </div>
         </div>
       </div>
     </section>
   );
 }
 
-useGLTF.preload("/hero-asset.glb");
