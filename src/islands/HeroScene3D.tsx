@@ -157,7 +157,7 @@ export function HoloSphere({
       const t = b.life / b.maxLife;
 
       b.mesh.position.addScaledVector(b.velocity, 1);
-      b.mesh.position.x += Math.sin(b.life * 0.1) * (0.002 / 0.65);
+      b.mesh.position.x += Math.sin(b.life * 0.03) * (0.002 / 0.65);
 
       // Pop-in: 0 → 1.3× overshoot → settle at 1×
       let scaleMult: number;
