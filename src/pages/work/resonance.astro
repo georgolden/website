@@ -6,11 +6,11 @@ import '../../styles/case.css';
 
 const lang = (Astro.currentLocale || 'en') as Lang;
 
-const meta = [
+const info = [
   { key: t(lang, 'case.meta.year'),     val: '2024 — present' },
-  { key: t(lang, 'case.meta.industry'), val: 'Trading · Fintech' },
   { key: 'Traders',                      val: '20,000+ active' },
-  { key: t(lang, 'case.meta.scale'),     val: '20TB / month' },
+  { key: t(lang, 'case.meta.industry'), val: 'Trading · Fintech' },
+  { key: 'Type',                         val: 'Fullstack SaaS' },
 ];
 
 const stats = [
@@ -34,24 +34,37 @@ const hints = [
   canonicalURL="/work/resonance/"
 >
   <!-- 01 Client -->
-  <section class="intro">
+  <section class="intro" data-nav-theme="white">
+    <video
+      class="intro__bg"
+      autoplay
+      muted
+      loop
+      playsinline
+      preload="metadata"
+      aria-hidden="true"
+    >
+      <source src="/video/resonance_hero.mp4" type="video/mp4" />
+    </video>
     <div class="shell">
       <p class="intro__eyebrow">{t(lang, 'case.client')}</p>
       <h1 class="intro__client">Resonance Vision</h1>
+    </div>
+  </section>
 
-      <div class="intro__body">
-        <dl class="intro__meta">
-          {meta.map(m => (
-            <div class="intro__meta-row">
-              <p class="intro__meta-key">{m.key}</p>
-              <p class="intro__meta-val">{m.val}</p>
-            </div>
-          ))}
-        </dl>
+  <section class="case-info">
+    <div class="shell case-info__grid">
+      <div class="case-info__meta">
+        {info.map(i => (
+          <div class="case-info__meta-row">
+            <p class="case-info__meta-key">{i.key}</p>
+            <p class="case-info__meta-val">{i.val}</p>
+          </div>
+        ))}
+      </div>
 
-        <div class="prose">
-          <p>Resonance Vision is a real-time trading platform serving retail and institutional traders. Institutional-grade ingestion behind a UI a retail trader can read in a glance.</p>
-        </div>
+      <div class="prose">
+        <p>Resonance Vision is a real-time trading platform serving retail and institutional traders. Institutional-grade ingestion behind a UI a retail trader can read in a glance.</p>
       </div>
     </div>
   </section>
@@ -73,7 +86,16 @@ const hints = [
       <p class="showcase__label">{t(lang, 'case.inMotion')}</p>
       <figure class="showcase__video">
         <div class="showcase__video-bar"><i></i><i></i><i></i></div>
-        <div class="ph">[ Dashboard capture · 16:9 video loop ]</div>
+        <video
+          class="showcase__video-el"
+          autoplay
+          muted
+          loop
+          playsinline
+          preload="metadata"
+        >
+          <source src="/video/resonance_desktop.mp4" type="video/mp4" />
+        </video>
       </figure>
       <div class="showcase__phones">
         <div class="phone showcase__m1"><div class="ph">[ Watchlist ]</div></div>
@@ -208,7 +230,7 @@ const hints = [
   </section>
 
   <!-- 05 Project agent -->
-  <section class="agent">
+  <section class="agent" data-nav-theme="dark">
     <div class="agent__motif" aria-hidden="true">
       <svg viewBox="0 0 1440 600" fill="none" stroke="currentColor" stroke-width="1" preserveAspectRatio="xMidYMid slice">
         <path d="M-100,520 C200,460 360,560 600,500 C840,440 980,540 1200,470 C1380,415 1500,460 1600,440"/>
@@ -234,11 +256,43 @@ const hints = [
     </div>
   </section>
 
-  <section class="next">
+  <section class="next" data-nav-theme="white">
     <a href="/work/44pool">
       <p class="next__eyebrow">{t(lang, 'case.next')} — 02 / 02</p>
       <h2 class="next__title">44pool →</h2>
       <span class="next__arrow">Distributed mining pool · worldwide infrastructure</span>
     </a>
   </section>
+<style>
+  .intro .intro__eyebrow,
+  .intro .intro__client { color: #fff; }
+  .intro .intro__eyebrow { color: oklch(100% 0 0 / 0.55); }
+</style>
+
+  <script is:inline>
+    (() => {
+      if (window.__navInverter) window.__navInverter.disconnect();
+      document.body.classList.remove("nav-white");
+
+      const state = new Map();
+      const recompute = () => {
+        let white = false;
+        for (const [el, visible] of state) {
+          if (visible && el.dataset.navTheme === "white") { white = true; }
+          if (visible && el.dataset.navTheme === "dark") { white = false; break; }
+        }
+        document.body.classList.toggle("nav-white", white);
+      };
+
+      const obs = new IntersectionObserver((entries) => {
+        for (const e of entries) state.set(e.target, e.isIntersecting);
+        recompute();
+      }, { rootMargin: "-65px 0px 0px 0px", threshold: 0 });
+
+      document.querySelectorAll("[data-nav-theme]").forEach((el) => obs.observe(el));
+      window.__navInverter = obs;
+
+      window.addEventListener("pageshow", (e) => { if (e.persisted) recompute(); });
+    })();
+  </script>
 </BaseLayout>

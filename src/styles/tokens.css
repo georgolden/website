@@ -117,10 +117,12 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
   grid-template-columns: 1fr 1fr;
   column-gap: clamp(1.5rem, 3vw, 2.5rem);
   align-items: start;
-  transition: grid-template-columns 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+  transition: grid-template-columns 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: grid-template-columns;
 }
 .work-grid--paired > .work-card {
-  transition: margin-top 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+  transition: margin-top 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: margin-top;
 }
 @media (hover: hover) and (min-width: 961px) {
   .work-grid--paired:has(> .work-card--lead:hover) {

@@ -5,16 +5,21 @@ export interface Props {
   description: string;
   tags: string[];
   mediaLabel: string;
+  image?: string;
   open?: boolean;
   variant?: 'default' | 'lead' | 'offset';
 }
-const { href, name, description, tags, mediaLabel, open = false, variant = 'default' } = Astro.props;
+const { href, name, description, tags, mediaLabel, image, open = false, variant = 'default' } = Astro.props;
 ---
 
 <article class={`work-card work-card--${variant}`}>
   <a href={href}>
-    <div class={`work-card__media${open ? ' work-card__media--open' : ''}`}>
-      <span class="placeholder-tag">{mediaLabel}</span>
+    <div class={`work-card__media${open ? ' work-card__media--open' : ''}${image ? ' work-card__media--image' : ''}`}>
+      {image ? (
+        <img src={image} alt={name} loading="lazy" />
+      ) : (
+        <span class="placeholder-tag">{mediaLabel}</span>
+      )}
     </div>
     <div class="work-card__meta">
       <div>
@@ -51,6 +56,9 @@ const { href, name, description, tags, mediaLabel, open = false, variant = 'defa
     text-transform: uppercase; letter-spacing: 0.12em;
   }
   .work-card__media--open .placeholder-tag { color: var(--ink-mute); }
+  .work-card__media--image img {
+    width: 100%; height: 100%; object-fit: cover; display: block;
+  }
 
   .work-card__meta {
     display: flex; justify-content: space-between; align-items: baseline;

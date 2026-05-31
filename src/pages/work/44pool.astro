@@ -1,17 +1,16 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import AgentCard from '../../components/AgentCard.astro';
-import ShowcaseBg from '../../components/ShowcaseBg.astro';
 import { t, type Lang } from '../../i18n/translations';
 import '../../styles/case.css';
 
 const lang = (Astro.currentLocale || 'en') as Lang;
 
-const meta = [
+const info = [
   { key: t(lang, 'case.meta.year'),     val: '2022 — present' },
-  { key: t(lang, 'case.meta.industry'), val: 'Mining · Infrastructure' },
   { key: 'Miners',                       val: '10,000+ workers' },
-  { key: 'Coverage',                     val: '5 regions, 3 coins' },
+  { key: t(lang, 'case.meta.industry'), val: 'Mining · Infrastructure' },
+  { key: 'Type',                         val: 'Fullstack SaaS' },
 ];
 
 const stats = [
@@ -49,20 +48,22 @@ const hints = [
     <div class="shell">
       <p class="intro__eyebrow">{t(lang, 'case.client')}</p>
       <h1 class="intro__client">44pool</h1>
+    </div>
+  </section>
 
-      <div class="intro__body">
-        <dl class="intro__meta">
-          {meta.map(m => (
-            <div class="intro__meta-row">
-              <p class="intro__meta-key">{m.key}</p>
-              <p class="intro__meta-val">{m.val}</p>
-            </div>
-          ))}
-        </dl>
+  <section class="case-info">
+    <div class="shell case-info__grid">
+      <div class="case-info__meta">
+        {info.map(i => (
+          <div class="case-info__meta-row">
+            <p class="case-info__meta-key">{i.key}</p>
+            <p class="case-info__meta-val">{i.val}</p>
+          </div>
+        ))}
+      </div>
 
-        <div class="prose">
-          <p>44pool is a distributed mining pool. Worldwide stratum endpoints, multi-coin payouts, an ops surface tight enough for a single operator to run.</p>
-        </div>
+      <div class="prose">
+        <p>44pool is a distributed mining pool. Worldwide stratum endpoints, multi-coin payouts, an ops surface tight enough for a single operator to run.</p>
       </div>
     </div>
   </section>
@@ -78,7 +79,17 @@ const hints = [
   </section>
 
   <section class="showcase">
-    <ShowcaseBg />
+    <video
+      class="showcase__bg"
+      autoplay
+      muted
+      loop
+      playsinline
+      preload="metadata"
+      aria-hidden="true"
+    >
+      <source src="/video/44pool_bg.mp4" type="video/mp4" />
+    </video>
     <div class="shell showcase__inner">
       <p class="showcase__label">{t(lang, 'case.inMotion')}</p>
       <figure class="showcase__video">
@@ -209,7 +220,7 @@ const hints = [
     </div>
   </section>
 
-  <section class="agent">
+  <section class="agent" data-nav-theme="dark">
     <div class="agent__motif" aria-hidden="true">
       <svg viewBox="0 0 1440 600" fill="none" stroke="currentColor" stroke-width="1" preserveAspectRatio="xMidYMid slice">
         <path d="M-100,520 C200,460 360,560 600,500 C840,440 980,540 1200,470 C1380,415 1500,460 1600,440"/>
@@ -253,7 +264,8 @@ const hints = [
       const recompute = () => {
         let white = false;
         for (const [el, visible] of state) {
-          if (visible && el.dataset.navTheme === 'white') { white = true; break; }
+          if (visible && el.dataset.navTheme === 'white') { white = true; }
+          if (visible && el.dataset.navTheme === 'dark') { white = false; break; }
         }
         document.body.classList.toggle('nav-white', white);
       };
@@ -273,13 +285,18 @@ const hints = [
 </BaseLayout>
 
 <style>
+  .showcase__bg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: 0;
+  }
+  .showcase {
+    background: #EDE9FE;
+  }
   .intro .intro__eyebrow,
-  .intro .intro__client,
-  .intro .intro__meta-key,
-  .intro .intro__meta-val,
-  .intro .prose,
-  .intro .prose p { color: #fff; }
-  .intro .intro__eyebrow,
-  .intro .intro__meta-key { color: oklch(100% 0 0 / 0.55); }
-  .intro .intro__body { border-top-color: oklch(100% 0 0 / 0.12); }
+  .intro .intro__client { color: #fff; }
+  .intro .intro__eyebrow { color: oklch(100% 0 0 / 0.55); }
 </style>

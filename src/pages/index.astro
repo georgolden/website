@@ -23,6 +23,7 @@ const work = [
     description: 'Distributed mining pool. Worldwide infrastructure, multi-coin payouts.',
     tags: ['Infrastructure', 'Backend', 'Distributed'],
     mediaLabel: '[ video loop · mining pool ops ]',
+    image: '/images/main_44pool.webp',
     variant: 'offset' as const,
   },
 ];
@@ -64,7 +65,7 @@ const gapUs = ['Websites and SaaS UI', 'Backend infrastructure we own', 'AI wove
   description="Websites, SaaS platforms, backend infrastructure, AI agents. One studio."
 >
   <!-- HERO -->
-  <section class="hero">
+  <section class="hero" data-nav-theme="white">
     <HeroScene />
     <div class="hero__content shell">
       <h1 class="hero__title">{t(lang, 'hero.title')}</h1>
@@ -160,6 +161,31 @@ const gapUs = ['Websites and SaaS UI', 'Backend infrastructure we own', 'AI wove
       />
     </div>
   </section>
+  <script is:inline>
+    (() => {
+      if (window.__navInverter) window.__navInverter.disconnect();
+      document.body.classList.remove("nav-white");
+
+      const state = new Map();
+      const recompute = () => {
+        let white = false;
+        for (const [el, visible] of state) {
+          if (visible && el.dataset.navTheme === "white") { white = true; break; }
+        }
+        document.body.classList.toggle("nav-white", white);
+      };
+
+      const obs = new IntersectionObserver((entries) => {
+        for (const e of entries) state.set(e.target, e.isIntersecting);
+        recompute();
+      }, { rootMargin: "-65px 0px 0px 0px", threshold: 0 });
+
+      document.querySelectorAll("[data-nav-theme]").forEach((el) => obs.observe(el));
+      window.__navInverter = obs;
+
+      window.addEventListener("pageshow", (e) => { if (e.persisted) recompute(); });
+    })();
+  </script>
 </BaseLayout>
 
 <style>
