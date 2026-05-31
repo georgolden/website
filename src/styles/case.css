@@ -2,6 +2,9 @@
 .intro {
   position: relative;
   overflow: hidden;
+  display: flex;
+  align-items: flex-end;
+  min-height: 92vh;
   padding-top: clamp(8rem, 14vw, 13rem);
   padding-bottom: clamp(4rem, 7vw, 6rem);
   isolation: isolate;
@@ -18,6 +21,7 @@
 .intro .shell {
   position: relative;
   z-index: 1;
+  margin: 0;
 }
 
 .intro__eyebrow {
@@ -127,6 +131,15 @@
   padding-block: clamp(2rem, 4vw, 3.5rem) clamp(3rem, 6vw, 5rem);
   border-top: 1px solid var(--rule);
 }
+.showcase__bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 0;
+  pointer-events: none;
+}
 .showcase__inner {
   position: relative;
   z-index: 1;
@@ -168,6 +181,25 @@
   aspect-ratio: 16 / 10;
   border-radius: 0 0 8px 8px;
 }
+.showcase__video--dark {
+  background: #0c0c14;
+  border-color: #1a1a28;
+  box-shadow: 0 1px 0 #1a1a28, 0 30px 60px -40px oklch(8% 0.005 280 / 0.55);
+  padding: 0;
+  overflow: hidden;
+}
+.showcase__video--dark .showcase__video-bar {
+  background: #13131f;
+}
+.showcase__video--dark .showcase__video-bar i {
+  background: #2e2e40;
+}
+.showcase__video--dark .showcase__video-el {
+  border-radius: 0;
+}
+.showcase--dark .showcase__label {
+  color: #fff;
+}
 
 .showcase__phones {
   grid-column: 1 / -1;
@@ -190,6 +222,11 @@
 .showcase__m1 { top: 0%;  left: 12%;  width: 22%; }
 .showcase__m2 { top: 23%; right: 12%; width: 22%; }
 .showcase__m3 { top: 56%; left: 28%;  width: 22%; }
+.showcase__shot {
+  position: absolute;
+  height: auto;
+  display: block;
+}
 
 @media (max-width: 860px) {
   .showcase__video {

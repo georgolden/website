@@ -256,30 +256,32 @@ const hints = [
 
   <script is:inline>
     (() => {
-      // Tear down any observer left over from a prior HMR pass or bfcache restore.
       if (window.__navInverter) window.__navInverter.disconnect();
       document.body.classList.remove('nav-white');
 
-      const state = new Map();
       const recompute = () => {
-        let white = false;
-        for (const [el, visible] of state) {
-          if (visible && el.dataset.navTheme === 'white') { white = true; }
-          if (visible && el.dataset.navTheme === 'dark') { white = false; break; }
-        }
+        const el = document.elementFromPoint(10, 80);
+        const section = el?.closest('[data-nav-theme]');
+        const white = section ? section.dataset.navTheme === 'white' : false;
         document.body.classList.toggle('nav-white', white);
       };
 
-      const obs = new IntersectionObserver((entries) => {
-        for (const e of entries) state.set(e.target, e.isIntersecting);
-        recompute();
-      }, { rootMargin: '-65px 0px 0px 0px', threshold: 0 });
+      let ticking = false;
+      window.addEventListener('scroll', () => {
+        if (!ticking) {
+          requestAnimationFrame(() => { recompute(); ticking = false; });
+          ticking = true;
+        }
+      }, { passive: true });
+
+      const obs = new IntersectionObserver(() => recompute(),
+        { rootMargin: '-65px 0px 0px 0px', threshold: 0 });
 
       document.querySelectorAll('[data-nav-theme]').forEach((el) => obs.observe(el));
       window.__navInverter = obs;
 
-      // Restore from bfcache shouldn't leave a stale nav theme.
       window.addEventListener('pageshow', (e) => { if (e.persisted) recompute(); });
+      recompute();
     })();
   </script>
 </BaseLayout>

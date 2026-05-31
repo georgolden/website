@@ -70,7 +70,7 @@ const hints = [
   </section>
 
   <!-- 02 Challenge -->
-  <section class="challenge">
+  <section class="challenge" data-nav-theme="dark">
     <div class="shell">
       <p class="section-label">{t(lang, 'case.challenge')}</p>
       <h2 class="challenge__title">Nine exchanges, <em>one chart</em>, zero lag — under a single operator.</h2>
@@ -81,10 +81,21 @@ const hints = [
   </section>
 
   <!-- 03 Showcase -->
-  <section class="showcase">
+  <section class="showcase showcase--dark" data-nav-theme="white">
+    <video
+      class="showcase__bg"
+      autoplay
+      muted
+      loop
+      playsinline
+      preload="metadata"
+      aria-hidden="true"
+    >
+      <source src="/video/resonance_bg.mp4" type="video/mp4" />
+    </video>
     <div class="shell showcase__inner">
       <p class="showcase__label">{t(lang, 'case.inMotion')}</p>
-      <figure class="showcase__video">
+      <figure class="showcase__video showcase__video--dark">
         <div class="showcase__video-bar"><i></i><i></i><i></i></div>
         <video
           class="showcase__video-el"
@@ -98,9 +109,9 @@ const hints = [
         </video>
       </figure>
       <div class="showcase__phones">
-        <div class="phone showcase__m1"><div class="ph">[ Watchlist ]</div></div>
-        <div class="phone showcase__m2"><div class="ph">[ Chart detail ]</div></div>
-        <div class="phone showcase__m3"><div class="ph">[ Order book ]</div></div>
+        <img class="showcase__shot showcase__m1" src="/images/resonance_chart.png" alt="Chart" loading="lazy" />
+        <img class="showcase__shot showcase__m2" src="/images/resonance_charts.png" alt="Charts" loading="lazy" />
+        <img class="showcase__shot showcase__m3" src="/images/resonance_cources.png" alt="Courses" loading="lazy" />
       </div>
     </div>
   </section>
@@ -274,25 +285,30 @@ const hints = [
       if (window.__navInverter) window.__navInverter.disconnect();
       document.body.classList.remove("nav-white");
 
-      const state = new Map();
       const recompute = () => {
-        let white = false;
-        for (const [el, visible] of state) {
-          if (visible && el.dataset.navTheme === "white") { white = true; }
-          if (visible && el.dataset.navTheme === "dark") { white = false; break; }
-        }
+        const el = document.elementFromPoint(10, 80);
+        const section = el?.closest('[data-nav-theme]');
+        const white = section ? section.dataset.navTheme === "white" : false;
         document.body.classList.toggle("nav-white", white);
       };
 
-      const obs = new IntersectionObserver((entries) => {
-        for (const e of entries) state.set(e.target, e.isIntersecting);
-        recompute();
-      }, { rootMargin: "-65px 0px 0px 0px", threshold: 0 });
+      let ticking = false;
+      window.addEventListener('scroll', () => {
+        if (!ticking) {
+          requestAnimationFrame(() => { recompute(); ticking = false; });
+          ticking = true;
+        }
+      }, { passive: true });
+
+      const obs = new IntersectionObserver(() => recompute(),
+        { rootMargin: "-65px 0px 0px 0px", threshold: 0 });
 
       document.querySelectorAll("[data-nav-theme]").forEach((el) => obs.observe(el));
       window.__navInverter = obs;
 
       window.addEventListener("pageshow", (e) => { if (e.persisted) recompute(); });
+      recompute();
     })();
   </script>
+
 </BaseLayout>
