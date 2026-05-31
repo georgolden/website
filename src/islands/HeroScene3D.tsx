@@ -1,5 +1,5 @@
-import { useRef, useMemo } from "react";
-import { Canvas, useFrame } from "@react-three/fiber";
+import { useRef, useMemo, useEffect } from "react";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { useGLTF, MeshTransmissionMaterial, Float, Sparkles, Environment } from "@react-three/drei";
 import { EffectComposer, Bloom } from "@react-three/postprocessing";
 import * as THREE from "three";
@@ -42,7 +42,7 @@ function HoloSphere({ mouse }: { mouse: React.MutableRefObject<{ x: number; y: n
           mesh.material = new THREE.MeshStandardMaterial({
             color: col,
             emissive: col,
-            emissiveIntensity: 8.2,
+            emissiveIntensity: 3.2,
             roughness: 0,
             metalness: 0,
             side: THREE.DoubleSide,
@@ -126,28 +126,37 @@ function HoloSphere({ mouse }: { mouse: React.MutableRefObject<{ x: number; y: n
 }
 
 /* ── dust ── */
-function Dust() {
+function Dust({ speed = 2.3 }: { speed?: number }) {
   const count = 500;
+  const { scene } = useThree();
+  const chipWorldPos = useRef(new THREE.Vector3());
 
-  const positions = useMemo(() => {
-    const arr = new Float32Array(count * 3);
+  // Each particle = 2 triangles = 6 vertices
+  const vertsPerParticle = 6;
+  const total = count * vertsPerParticle;
+
+
+  const directions = useMemo(() => {
+    const arr = new Float32Array(count * 2);
     for (let i = 0; i < count; i++) {
-      arr[i * 3 + 0] = (Math.random() - 0.5) * 10;
-      arr[i * 3 + 1] = (Math.random() - 0.5) * 10;
-      arr[i * 3 + 2] = (Math.random() - 0.5) * 10;
+      const theta = Math.random() * Math.PI * 2;
+      const x = Math.cos(theta);
+      const y = Math.sin(theta) * 0.2; // 👈 squish Y — lower = less up/down
+      const len = Math.sqrt(x * x + y * y);
+      arr[i * 2 + 0] = x / len;
+      arr[i * 2 + 1] = y / len;
     }
     return arr;
   }, []);
-
-  const offsets = useMemo(() => {
+  const timeOffsets = useMemo(() => {
     const arr = new Float32Array(count);
-    for (let i = 0; i < count; i++) arr[i] = Math.random() * Math.PI * 2;
+    for (let i = 0; i < count; i++) arr[i] = Math.random() * 5.0;
     return arr;
   }, []);
 
   const sizes = useMemo(() => {
     const arr = new Float32Array(count);
-    for (let i = 0; i < count; i++) arr[i] = Math.random() * 2.5 + 0.5;
+    for (let i = 0; i < count; i++) arr[i] = Math.random() * 0.06 + 0.01;
     return arr;
   }, []);
 
@@ -157,37 +166,108 @@ function Dust() {
     return arr;
   }, []);
 
+  // Expand per-particle data to per-vertex (6 verts per particle)
+  const expand = (src: Float32Array, stride: number) => {
+    const dst = new Float32Array(count * vertsPerParticle * stride);
+    for (let i = 0; i < count; i++) {
+      for (let v = 0; v < vertsPerParticle; v++) {
+        for (let s = 0; s < stride; s++) {
+          dst[(i * vertsPerParticle + v) * stride + s] = src[i * stride + s];
+        }
+      }
+    }
+    return dst;
+  };
+
+  // quad UV corner indices — tells each vertex which corner it is
+  // quad layout: 2 tris = [0,1,2, 2,3,0] corners
+  const cornerIds = useMemo(() => {
+    const arr = new Float32Array(total);
+    const corners = [0, 1, 2, 2, 3, 0];
+    for (let i = 0; i < count; i++)
+      for (let v = 0; v < vertsPerParticle; v++)
+        arr[i * vertsPerParticle + v] = corners[v];
+    return arr;
+  }, []);
+
+  const dirExpanded = useMemo(() => expand(directions, 2), [directions]);
+  const timeOffsetExpanded = useMemo(() => expand(timeOffsets.map ? new Float32Array(timeOffsets) : timeOffsets, 1), [timeOffsets]);
+  const sizeExpanded = useMemo(() => expand(sizes, 1), [sizes]);
+  const hueExpanded = useMemo(() => expand(hueOffsets, 1), [hueOffsets]);
+
+  // dummy positions — actual positions computed in vertex shader
+  const dummyPos = useMemo(() => new Float32Array(total * 3), []);
+
   const mat = useMemo(() => new THREE.ShaderMaterial({
     uniforms: {
       uTime: { value: 0 },
-      uBaseHue: { value: 0.7 }, // hsl(180, ...) = cyan
+      uSpeed: { value: speed },
+      uBaseHue: { value: 0.7 },
+      uOrigin: { value: new THREE.Vector3() },
     },
     vertexShader: `
       uniform float uTime;
-      attribute float aOffset;
+      uniform float uSpeed;
+      uniform vec3  uOrigin;
+
+      attribute vec2  aDir;
+      attribute float aTimeOffset;
       attribute float aSize;
       attribute float aHueOffset;
+      attribute float aCorner;   // 0,1,2,3
+
+      varying float vAlpha;
       varying float vHueOffset;
+      varying float vT; // 0 = tail, 1 = head (for fade)
 
       void main() {
-        vec3 pos = position;
-        pos.y += sin(uTime * 0.4 + aOffset) * 0.3;
-        pos.x += cos(uTime * 0.3 + aOffset) * 0.2;
+        float lifetime = 2.0;
+        float t        = mod(uTime - aTimeOffset, lifetime);
+        float progress = t / lifetime;
+
+        // head and tail positions along fly direction
+        float trailLen = aSize * 15.0;
+        vec3 head = uOrigin + vec3(aDir, 0.0) * t * uSpeed;
+        vec3 tail = head    - vec3(aDir, 0.0) * trailLen;
+
+        // perpendicular for width
+        vec2 perp = vec2(-aDir.y, aDir.x) * aSize * 0.05;
+
+        // 4 corners of the quad:
+        // 0 = tail-left, 1 = tail-right, 2 = head-right, 3 = head-left
+        vec3 pos;
+        float localT; // 0 at tail, 1 at head
+        if (aCorner < 0.5) {
+          pos = tail + vec3(perp, 0.0);  localT = 0.0;
+        } else if (aCorner < 1.5) {
+          pos = tail - vec3(perp, 0.0);  localT = 0.0;
+        } else if (aCorner < 2.5) {
+          pos = head - vec3(perp, 0.0);  localT = 1.0;
+        } else {
+          pos = head + vec3(perp, 0.0);  localT = 1.0;
+        }
+
         gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
-        gl_PointSize = aSize;
+
+        float fadeIn  = smoothstep(0.0, 0.1, progress);
+        float fadeOut = 1.0 - smoothstep(0.6, 1.0, progress);
+        vAlpha     = fadeIn * fadeOut;
         vHueOffset = aHueOffset;
+        vT         = localT;
       }
     `,
     fragmentShader: `
       uniform float uBaseHue;
+      varying float vAlpha;
       varying float vHueOffset;
+      varying float vT;
 
       vec3 hsl2rgb(float h, float s, float l) {
         float c = (1.0 - abs(2.0 * l - 1.0)) * s;
         float x = c * (1.0 - abs(mod(h * 6.0, 2.0) - 1.0));
         float m = l - c / 2.0;
         vec3 rgb;
-        if (h < 1.0/6.0)      rgb = vec3(c, x, 0.0);
+        if      (h < 1.0/6.0) rgb = vec3(c, x, 0.0);
         else if (h < 2.0/6.0) rgb = vec3(x, c, 0.0);
         else if (h < 3.0/6.0) rgb = vec3(0.0, c, x);
         else if (h < 4.0/6.0) rgb = vec3(0.0, x, c);
@@ -197,32 +277,45 @@ function Dust() {
       }
 
       void main() {
-        float d = length(gl_PointCoord - 0.5);
-        if (d > 0.5) discard;
         float h = mod(uBaseHue + vHueOffset, 1.0);
         vec3 col = hsl2rgb(h, 1.0, 0.6) * 10.0;
-        gl_FragColor = vec4(col, 1.0 - d * 2.0);
+
+        // tail fades to transparent, head stays bright
+        float trailFade = vT;
+        gl_FragColor = vec4(col, trailFade * vAlpha);
       }
     `,
     transparent: true,
     depthWrite: false,
+    side: THREE.DoubleSide,
   }), []);
 
-  const ref = useRef<THREE.Points>(null!);
+  useEffect(() => {
+    mat.uniforms.uSpeed.value = speed;
+  }, [speed, mat]);
+
+  const ref = useRef<THREE.Mesh>(null!);
 
   useFrame(({ clock }) => {
+    const chip = scene.getObjectByName('Chip');
+    if (chip) {
+      chip.getWorldPosition(chipWorldPos.current);
+      mat.uniforms.uOrigin.value.copy(chipWorldPos.current);
+    }
     mat.uniforms.uTime.value = clock.getElapsedTime();
   });
 
   return (
-    <points position={[2, 0, -6]} ref={ref} material={mat}>
+    <mesh ref={ref} material={mat}>
       <bufferGeometry>
-        <bufferAttribute attach="attributes-position" args={[positions, 3]} />
-        <bufferAttribute attach="attributes-aOffset" args={[offsets, 1]} />
-        <bufferAttribute attach="attributes-aSize" args={[sizes, 1]} />
-        <bufferAttribute attach="attributes-aHueOffset" args={[hueOffsets, 1]} />
+        <bufferAttribute attach="attributes-position" args={[dummyPos, 3]} />
+        <bufferAttribute attach="attributes-aDir" args={[dirExpanded, 2]} />
+        <bufferAttribute attach="attributes-aTimeOffset" args={[timeOffsetExpanded, 1]} />
+        <bufferAttribute attach="attributes-aSize" args={[sizeExpanded, 1]} />
+        <bufferAttribute attach="attributes-aHueOffset" args={[hueExpanded, 1]} />
+        <bufferAttribute attach="attributes-aCorner" args={[cornerIds, 1]} />
       </bufferGeometry>
-    </points>
+    </mesh>
   );
 }
 
@@ -306,7 +399,7 @@ export default function HeroSection() {
 
         <EffectComposer>
           <Bloom
-            intensity={1.5}        /* strength of the glow */
+            intensity={1.3}        /* strength of the glow */
             luminanceThreshold={.9} /* only bright parts glow */
             luminanceSmoothing={0.8}
             mipmapBlur            /* smoother, less pixelated bloom */
