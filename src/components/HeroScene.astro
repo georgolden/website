@@ -1,19 +1,51 @@
 ---
-// Drop your video file in application/public/ and update the <source> src below.
 ---
 
 <div class="hero__scene">
   <video
+    id="hero-video-intro"
     class="hero__video"
     autoplay
     muted
+    playsinline
+    preload="auto"
+    poster="/images/posters/gostudio_hero_poster.webp"
+  >
+    <source src="/video/gostudio_hero.mp4" type="video/mp4" />
+  </video>
+  <video
+    id="hero-video-loop"
+    class="hero__video hero__video--hidden"
+    muted
     loop
     playsinline
-    preload="metadata"
+    preload="auto"
+    poster="/images/posters/godstudio_hero_static_poster.webp"
   >
-    <source src="" type="video/mp4" />
+    <source src="/video/godstudio_hero_static.mp4" type="video/mp4" />
   </video>
 </div>
+
+<script is:inline>
+  (() => {
+    const intro = document.getElementById('hero-video-intro');
+    const loop = document.getElementById('hero-video-loop');
+    if (!intro || !loop) return;
+
+    const switchToLoop = () => {
+      intro.classList.add('hero__video--hidden');
+      loop.classList.remove('hero__video--hidden');
+      loop.play().catch(() => {});
+      intro.removeEventListener('ended', switchToLoop);
+    };
+
+    if (intro.ended) {
+      switchToLoop();
+    } else {
+      intro.addEventListener('ended', switchToLoop);
+    }
+  })();
+</script>
 
 <style>
   .hero__scene {
@@ -28,9 +60,14 @@
     .hero__scene { height: clamp(360px, 52dvh, 480px); }
   }
   .hero__video {
+    position: absolute;
+    inset: 0;
     width: 100%;
     height: 100%;
     object-fit: cover;
     display: block;
+  }
+  .hero__video--hidden {
+    display: none;
   }
 </style>
