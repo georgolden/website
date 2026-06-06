@@ -10,6 +10,7 @@ export interface Props {
   variant?: 'default' | 'lead' | 'offset';
 }
 const { href, name, description, tags, mediaLabel, image, open = false, variant = 'default' } = Astro.props;
+const firstSentence = description.split(/\.(\s|$)/)[0] + '.';
 ---
 
 <article class={`work-card work-card--${variant}`}>
@@ -24,7 +25,8 @@ const { href, name, description, tags, mediaLabel, image, open = false, variant 
     <div class="work-card__glass">
       <div class="work-card__glass-inner">
         <div class="work-card__name">{name}</div>
-        <p class="work-card__desc">{description}</p>
+        <p class="work-card__desc work-card__desc--full">{description}</p>
+        <p class="work-card__desc work-card__desc--short" aria-hidden="true">{firstSentence}</p>
         <div class="work-card__tags">
           {tags.map(tag => <span>{tag}</span>)}
         </div>
@@ -125,6 +127,12 @@ const { href, name, description, tags, mediaLabel, image, open = false, variant 
     color: var(--ink);
     margin: 0.25rem 0 0;
     max-width: 38ch;
+  }
+  .work-card__desc--short { display: none; }
+
+  @media (max-width: 640px) {
+    .work-card__desc--full { display: none; }
+    .work-card__desc--short { display: block; }
   }
   .work-card__tags {
     margin-top: 0.6rem;

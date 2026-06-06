@@ -22,7 +22,7 @@ const work = [
     href: '/work/44pool',
     name: '44pool',
     description: 'Distributed mining pool. Worldwide infrastructure, multi-coin payouts.',
-    tags: ['Infrastructure', 'Backend', 'Distributed'],
+    tags: ['Infra', 'Backend', 'Distributed'],
     mediaLabel: '[ video loop · mining pool ops ]',
     image: '/images/main_44pool.webp',
     variant: 'offset' as const,
@@ -139,28 +139,34 @@ const gapCategories = [
         </div>
       </header>
 
-      <div class='gap__grid'>
-        <div class='gap__col'>
-          <div class='gap__cell gap__cell--head'>
+      <div class='gap__cards' data-sync-gap>
+        <div class='gap__card gap__card--them'>
+          <div class='gap__card-head'>
             <p class='gap__label'>What most studios ship</p>
             <h3 class='gap__headline'>Design, build, hand off.</h3>
           </div>
-          {gapCategories.map((cat) => (
-            <div class='gap__cell'>
-              <span class='gap__cat'>{cat.label}</span>
-              <p class='gap__body'>{cat.them}</p>
+          {gapCategories.map((cat, i) => (
+            <div class='gap__item' data-gap-item={i}>
+              <span class='gap__item-icon'><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span>
+              <div class='gap__item-content'>
+                <span class='gap__cat'>{cat.label}</span>
+                <p class='gap__body'>{cat.them}</p>
+              </div>
             </div>
           ))}
         </div>
-        <div class='gap__col gap__col--us'>
-          <div class='gap__cell gap__cell--head'>
+        <div class='gap__card gap__card--us'>
+          <div class='gap__card-head'>
             <p class='gap__label'>What we ship</p>
             <h3 class='gap__headline'>The whole system, operated.</h3>
           </div>
-          {gapCategories.map((cat) => (
-            <div class='gap__cell'>
-              <span class='gap__cat'>{cat.label}</span>
-              <p class='gap__body'>{cat.us}</p>
+          {gapCategories.map((cat, i) => (
+            <div class='gap__item' data-gap-item={i}>
+              <span class='gap__item-icon'><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+              <div class='gap__item-content'>
+                <span class='gap__cat'>{cat.label}</span>
+                <p class='gap__body'>{cat.us}</p>
+              </div>
             </div>
           ))}
         </div>
@@ -218,6 +224,55 @@ const gapCategories = [
   </section>
   <script is:inline>
     (() => {
+      // Gap height sync
+      const syncGapItems = () => {
+        const container = document.querySelector('[data-sync-gap]');
+        if (!container) return;
+        const cards = container.querySelectorAll('.gap__card');
+        if (cards.length !== 2) return;
+        
+        // Reset heights
+        cards.forEach(card => {
+          card.querySelectorAll('[data-gap-item]').forEach(item => {
+            item.style.minHeight = '';
+          });
+        });
+        
+        // Only sync on desktop (2 columns)
+        if (window.innerWidth <= 720) return;
+        
+        // Find max height for each pair
+        const heads = container.querySelectorAll('.gap__card-head');
+        if (heads.length === 2) {
+          const h0 = heads[0].getBoundingClientRect().height;
+          const h1 = heads[1].getBoundingClientRect().height;
+          const maxHead = Math.max(h0, h1);
+          heads[0].style.minHeight = maxHead + 'px';
+          heads[1].style.minHeight = maxHead + 'px';
+        }
+      
+        const items0 = cards[0].querySelectorAll('[data-gap-item]');
+        const items1 = cards[1].querySelectorAll('[data-gap-item]');
+        
+        items0.forEach((item, i) => {
+          const other = items1[i];
+          if (!other) return;
+          const h0 = item.getBoundingClientRect().height;
+          const h1 = other.getBoundingClientRect().height;
+          const max = Math.max(h0, h1);
+          item.style.minHeight = max + 'px';
+          other.style.minHeight = max + 'px';
+        });
+      };
+      
+      // Run on load and resize
+      window.addEventListener('load', syncGapItems);
+      window.addEventListener('resize', syncGapItems);
+      
+      // Also run after fonts load
+      document.fonts?.ready?.then(syncGapItems);
+      
+      // Nav inverter
       if (window.__navInverter) window.__navInverter.disconnect();
       document.body.classList.remove('nav-white');
 
@@ -363,51 +418,94 @@ const gapCategories = [
     padding-block: clamp(4rem, 7vw, 7rem);
     border-top: 1px solid var(--rule-soft);
   }
-  .gap__grid {
+  .gap__cards {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    grid-auto-flow: column;
-    grid-template-rows: repeat(6, auto);
-    align-items: start;
-    gap: 0.55rem clamp(2rem, 5vw, 4rem);
+    grid-template-columns: 1fr 1fr;
+    gap: clamp(1.5rem, 3vw, 2.5rem);
     margin-top: clamp(2rem, 4vw, 3rem);
   }
-  .gap__col {
-    display: contents;
+  .gap__card {
+    background: oklch(100% 0 0 / 0.50);
+    backdrop-filter: blur(20px) saturate(1.4);
+    -webkit-backdrop-filter: blur(20px) saturate(1.4);
+    border: 1px solid oklch(100% 0 0 / 0.18);
+    border-radius: 24px;
+    box-shadow:
+      0 4px 12px rgba(0,0,0,0.06),
+      0 0 0 1px oklch(100% 0 0 / 0.05) inset,
+      0 1px 0 oklch(100% 0 0 / 0.12) inset;
+    padding: 1.5rem 2rem;
+    display: flex;
+    flex-direction: column;
   }
-  .gap__cell {
-    display: grid;
-    grid-template-columns: 1.25rem 1fr;
-    align-items: start;
-    row-gap: 0.2rem;
-    column-gap: 0.5rem;
-    font-family: 'Inter', var(--sans);
-    font-size: var(--step-0);
-    color: var(--ink);
+  .gap__card-head {
+    padding-bottom: 1rem;
+    margin-bottom: 0;
+    border-bottom: 1px solid oklch(100% 0 0 / 0.12);
+    flex-shrink: 0;
   }
-  .gap__cell::before {
+  .gap__item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding-block: 0.75rem;
+    border-bottom: 1px solid oklch(100% 0 0 / 0.08);
+  }
+  .gap__item:last-child {
+    border-bottom: none;
+  }
+  .gap__card--them {
+    background: linear-gradient(135deg, oklch(35% 0.08 280) 0%, oklch(25% 0.06 300) 50%, oklch(20% 0.04 320) 100%);
+    border-color: oklch(100% 0 0 / 0.12);
+    position: relative;
+    overflow: hidden;
+  }
+  .gap__card--them::before {
     content: '';
-    grid-row: 2;
-    grid-column: 1;
-    align-self: start;
-    margin-top: 0.55em;
-    height: 1px;
-    width: 12px;
-    background: currentColor;
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(ellipse at 30% 20%, oklch(45% 0.12 280 / 0.15) 0%, transparent 50%),
+                radial-gradient(ellipse at 70% 80%, oklch(35% 0.10 300 / 0.10) 0%, transparent 50%);
+    pointer-events: none;
   }
-  .gap__cell--head {
-    padding-top: 1.25rem;
-    border-top: 1px solid var(--rule);
-    grid-template-columns: 1fr;
+  .gap__card--us {
+    background: oklch(100% 0 0 / 0.50);
+    border-color: oklch(100% 0 0 / 0.20);
+    position: relative;
+    overflow: hidden;
   }
-  .gap__cell--head::before {
-    display: none;
+  .gap__card--us::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(ellipse at 30% 20%, oklch(55% 0.15 250 / 0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at 70% 80%, oklch(65% 0.12 280 / 0.06) 0%, transparent 50%);
+    pointer-events: none;
   }
-  .gap__col--us .gap__cell--head {
-    border-top-color: var(--ink);
+  .gap__card--them .gap__label,
+  .gap__card--them .gap__headline,
+  .gap__card--them .gap__cat,
+  .gap__card--them .gap__body {
+    color: oklch(100% 0 0 / 0.88);
   }
-  .gap__col--us .gap__cell {
-    color: var(--ink);
+  .gap__card--them .gap__item-icon {
+    color: oklch(75% 0.20 25);
+  }
+  .gap__card--us .gap__item-icon {
+    color: oklch(65% 0.18 145);
+  }
+  .gap__item-icon {
+    flex-shrink: 0;
+    margin-top: 0.15rem;
+  }
+  .gap__item-content {
+    min-width: 0;
   }
   .gap__label {
     font-family: var(--mono);
@@ -415,42 +513,35 @@ const gapCategories = [
     text-transform: uppercase;
     letter-spacing: 0.14em;
     color: var(--ink-mute);
-    margin: 0 0 1rem;
-  }
-  .gap__col--us .gap__label {
-    color: var(--ink);
+    margin: 0 0 0.5rem;
   }
   .gap__headline {
     font-family: var(--display);
     font-weight: 700;
-    font-size: clamp(1.5rem, 1.1rem + 1.5vw, 2.25rem);
-    line-height: 1.05;
+    font-size: clamp(1.35rem, 1rem + 1.2vw, 2rem);
+    line-height: 1.15;
     letter-spacing: -0.02em;
     margin: 0;
-    max-width: 18ch;
+    max-width: 20ch;
+    min-height: 2.4rem;
   }
   .gap__cat {
-    grid-row: 1;
-    grid-column: 1 / -1;
     display: block;
     font-family: 'Inter', var(--mono);
     font-size: 0.65rem;
     text-transform: uppercase;
     letter-spacing: 0.12em;
     color: var(--ink-soft);
+    margin-bottom: 0.35rem;
   }
   .gap__body {
-    grid-row: 2;
-    grid-column: 2 / -1;
     margin: 0;
     line-height: 1.45;
+    font-family: 'Inter', var(--sans);
   }
   @media (max-width: 720px) {
-    .gap__grid {
+    .gap__cards {
       grid-template-columns: 1fr;
-      grid-auto-flow: row;
-      grid-template-rows: auto;
-      gap: 0.55rem;
     }
   }
 

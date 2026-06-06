@@ -4,3 +4,5 @@ dist
 .sisyphus
 .omo
 tmp
+@extracted-designs
+.playwright-mcp
