@@ -62,9 +62,10 @@ const work = [
 <style>
   .footer {
     background: var(--bg-dark);
-    color: oklch(100% 0 0 / 0.65);
+    color: oklch(100% 0 0 / 0.70);
     padding-block: 4rem 2.5rem;
-    border-top: 1px solid oklch(100% 0 0 / 0.08);
+    border-top: 1px solid oklch(100% 0 0 / 0.10);
+    box-shadow: 0 -20px 40px oklch(55% 0.15 250 / 0.06);
   }
   .footer__grid {
     display: grid;
@@ -74,7 +75,7 @@ const work = [
   .footer__brand {
     font-family: var(--display); font-weight: 900;
     font-size: clamp(1.5rem, 1.1rem + 1vw, 2rem);
-    color: var(--bg);
+    color: oklch(100% 0 0 / 0.92);
     letter-spacing: -0.02em;
     line-height: 1.1;
     max-width: 18ch;
@@ -83,7 +84,7 @@ const work = [
     margin: 0 0 1rem;
     font-family: var(--mono); font-size: 0.7rem;
     text-transform: uppercase; letter-spacing: 0.14em;
-    color: oklch(100% 0 0 / 0.4);
+    color: oklch(100% 0 0 / 0.50);
     font-weight: 500;
   }
   .footer__col ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.55rem; }
@@ -95,9 +96,9 @@ const work = [
     display: flex; justify-content: space-between; align-items: center;
     gap: 1.5rem; flex-wrap: wrap;
     padding-top: 1.5rem;
-    border-top: 1px solid oklch(100% 0 0 / 0.08);
+    border-top: 1px solid oklch(100% 0 0 / 0.10);
     font-family: var(--mono); font-size: 0.75rem;
-    color: oklch(100% 0 0 / 0.4);
+    color: oklch(100% 0 0 / 0.50);
   }
   .footer__langs { display: flex; flex-wrap: wrap; gap: 0.4rem 1rem; }
   .footer__langs a { transition: color 0.2s; }

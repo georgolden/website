@@ -138,11 +138,11 @@ const links = [
     min-width: 5rem;
     padding: 0.45rem 1rem;
     border-radius: 999px;
-    background: oklch(100% 0 0 / 0.10);
+    background: oklch(100% 0 0 / 0.08);
     border: 1px solid oklch(15% 0.005 280 / 0.12);
     box-shadow: 0 4px 6px rgba(0,0,0,0.1), 0 0 20px rgba(0,0,0,0.05);
-    backdrop-filter: blur(12px) saturate(1.4);
-    -webkit-backdrop-filter: blur(12px) saturate(1.4);
+    backdrop-filter: blur(20px) saturate(1.6);
+    -webkit-backdrop-filter: blur(20px) saturate(1.6);
     transition: padding 0.4s cubic-bezier(0.175, 0.885, 0.32, 2.2);
     font-weight: 600;
   }
@@ -170,7 +170,7 @@ const links = [
       gap: 0;
       padding: 0.22rem 0.3rem;
       border-radius: 999px;
-      background: oklch(100% 0 0 / 0.65);
+      background: oklch(100% 0 0 / 0.55);
       border: 1px solid oklch(15% 0.005 280 / 0.12);
       box-shadow: 0 1px 4px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,1);
       /* No backdrop-filter here — it creates a compositing boundary that breaks
@@ -206,11 +206,11 @@ const links = [
     flex-direction: column; gap: 0.2rem;
     padding: 0.35rem;
     border-radius: 18px;
-    background: oklch(100% 0 0 / 0.10);
+    background: oklch(100% 0 0 / 0.08);
     border: 1px solid oklch(15% 0.005 280 / 0.12);
     box-shadow: 0 8px 32px rgba(0,0,0,0.14);
-    backdrop-filter: blur(12px) saturate(1.4);
-    -webkit-backdrop-filter: blur(12px) saturate(1.4);
+    backdrop-filter: blur(20px) saturate(1.6);
+    -webkit-backdrop-filter: blur(20px) saturate(1.6);
     opacity: 0; pointer-events: none;
     transform: translateY(-6px) scale(0.97);
     transform-origin: top right;
@@ -239,8 +239,8 @@ const links = [
     background: oklch(10% 0.005 280 / 0.88);
     border: 1px solid oklch(100% 0 0 / 0.12);
     box-shadow: 0 4px 6px rgba(0,0,0,0.2), 0 0 20px rgba(0,0,0,0.1);
-    backdrop-filter: blur(12px) saturate(1.4);
-    -webkit-backdrop-filter: blur(12px) saturate(1.4);
+    backdrop-filter: blur(20px) saturate(1.6);
+    -webkit-backdrop-filter: blur(20px) saturate(1.6);
     color: #fff; font-size: var(--step-1); font-weight: 600;
     transition: padding 0.4s cubic-bezier(0.175, 0.885, 0.32, 2.2);
   }
@@ -272,11 +272,11 @@ const links = [
     min-width: 5rem;
     padding: 0.45rem 1rem; border-radius: 999px;
     font-size: var(--step-1); color: var(--ink);
-    background: oklch(100% 0 0 / 0.10);
+    background: oklch(100% 0 0 / 0.08);
     border: 1px solid oklch(15% 0.005 280 / 0.12);
     box-shadow: 0 4px 6px rgba(0,0,0,0.1), 0 0 20px rgba(0,0,0,0.05);
-    backdrop-filter: blur(12px) saturate(1.4);
-    -webkit-backdrop-filter: blur(12px) saturate(1.4);
+    backdrop-filter: blur(20px) saturate(1.6);
+    -webkit-backdrop-filter: blur(20px) saturate(1.6);
     transition: padding 0.4s cubic-bezier(0.175, 0.885, 0.32, 2.2);
     font-weight: 600;
   }
@@ -288,12 +288,12 @@ const links = [
   :global(.lang__menu) {
     position: absolute; top: calc(100% + 6px); right: 0;
     list-style: none; margin: 0; padding: 4px;
-    background: oklch(100% 0 0 / 0.10);
+    background: oklch(100% 0 0 / 0.08);
     border: 1px solid oklch(15% 0.005 280 / 0.12);
     border-radius: 16px;
     box-shadow: 0 8px 32px rgba(0,0,0,0.12);
-    backdrop-filter: blur(12px) saturate(1.4);
-    -webkit-backdrop-filter: blur(12px) saturate(1.4);
+    backdrop-filter: blur(20px) saturate(1.6);
+    -webkit-backdrop-filter: blur(20px) saturate(1.6);
     min-width: 140px; z-index: 60;
     isolation: isolate;
   }
@@ -318,43 +318,43 @@ const links = [
   :global(.nav-white) .hamburger   { color: #fff; }
 
   :global(.nav-white) .nav__links a {
-    color: oklch(100% 0 0 / 0.85);
+    color: oklch(100% 0 0 / 0.88);
     border-color: oklch(100% 0 0 / 0.20);
   }
   :global(.nav-white) .nav__links a :global(.lg-tint) { background: rgba(255,255,255,0.12); }
 
   :global(.nav-white .lang__btn) {
-    color: oklch(100% 0 0 / 0.90);
+    color: oklch(100% 0 0 / 0.92);
     border-color: oklch(100% 0 0 / 0.18);
   }
   :global(.nav-white .lang__btn .lg-tint) { background: rgba(255,255,255,0.12); }
 
   :global(.nav-white .lang__menu) {
-    background: oklch(18% 0.005 280 / 0.82);
+    background: oklch(15% 0.01 280 / 0.85);
     border-color: oklch(100% 0 0 / 0.14);
     box-shadow: 0 8px 32px rgba(0,0,0,0.28);
   }
   :global(.nav-white .lang__menu .lg-tint)  { background: rgba(255,255,255,0.06); }
-  :global(.nav-white .lang__opt)            { color: oklch(100% 0 0 / 0.85); }
+  :global(.nav-white .lang__opt)            { color: oklch(100% 0 0 / 0.88); }
   :global(.nav-white .lang__opt:hover)      { background: oklch(100% 0 0 / 0.08); color: #fff; }
   :global(.nav-white .lang__opt.is-active)  { background: oklch(100% 0 0 / 0.10); color: #fff; }
 
   :global(.nav-white) .mobile-dropdown {
-    background: oklch(100% 0 0 / 0.10);
+    background: oklch(100% 0 0 / 0.08);
     border-color: oklch(100% 0 0 / 0.20);
   }
   :global(.nav-white) .mobile-dropdown :global(.lg-tint) { background: rgba(255,255,255,0.12); }
-  :global(.nav-white) .mobile-drop-link { color: oklch(100% 0 0 / 0.85); }
-  :global(.nav-white) .mobile-drop-link:hover { color: #fff; background: oklch(100% 0 0 / 0.08); }
+  :global(.nav-white) .mobile-drop-link { color: oklch(100% 0 0 / 0.88); }
+  :global(.nav-white) .mobile-drop-link:hover { color: #fff; background: oklch(100% 0 0 / 0.10); }
 
   @media (max-width: 768px) {
     :global(.nav-white) .nav__tools {
-      background: oklch(100% 0 0 / 0.22);
+      background: oklch(100% 0 0 / 0.18);
       border-color: oklch(100% 0 0 / 0.20);
       box-shadow: 0 1px 4px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.25);
     }
     :global(.nav-white) .nav__tools > * + * { border-left-color: oklch(100% 0 0 / 0.15); }
     :global(.nav-white .lang__btn) { background: transparent !important; border: none !important; box-shadow: none !important; }
-    :global(.nav-white .chat-btn)  { background: transparent !important; border: none !important; box-shadow: none !important; color: oklch(100% 0 0 / 0.90) !important; }
+    :global(.nav-white .chat-btn)  { background: transparent !important; border: none !important; box-shadow: none !important; color: oklch(100% 0 0 / 0.92) !important; }
   }
 </style>

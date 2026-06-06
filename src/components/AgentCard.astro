@@ -35,7 +35,7 @@ const { eyebrow, title, lede, placeholder, ariaLabel, hints, inputVariant = 'bg'
   .agent-card__eyebrow {
     font-family: var(--mono); font-size: 0.75rem;
     text-transform: uppercase; letter-spacing: 0.12em;
-    color: var(--ink-mute);
+    color: var(--ink-soft);
     margin-bottom: 1rem;
   }
   .agent-card__title {
@@ -47,8 +47,9 @@ const { eyebrow, title, lede, placeholder, ariaLabel, hints, inputVariant = 'bg'
     max-width: 16ch;
   }
   .agent-card__lede {
+    font-family: 'Inter', var(--sans);
     font-size: clamp(1rem, 0.95rem + 0.2vw, 1.125rem);
-    color: var(--ink-soft);
+    color: var(--ink);
     line-height: 1.45;
     max-width: 48ch;
     margin: 0 0 clamp(3rem, 6vw, 5rem);
@@ -59,11 +60,12 @@ const { eyebrow, title, lede, placeholder, ariaLabel, hints, inputVariant = 'bg'
     justify-content: center;
   }
   .agent-card__hints button {
+    font-family: 'Inter', var(--sans);
     border: 1px solid var(--rule);
     padding: 0.45rem 0.95rem;
     border-radius: 999px;
     font-size: 0.85rem;
-    color: var(--ink-soft);
+    color: var(--ink);
     background: var(--bg);
   }
   .agent-card__hints button:hover {

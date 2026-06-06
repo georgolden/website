@@ -31,7 +31,7 @@ const { num, title, copy, capabilities, href } = Astro.props;
   }
   .service-row__num {
     font-family: var(--mono); font-size: 0.75rem;
-    color: var(--ink-mute);
+    color: var(--ink-soft);
     padding-top: 0.5rem;
   }
   .service-row__title {
@@ -41,15 +41,16 @@ const { num, title, copy, capabilities, href } = Astro.props;
     margin: 0; line-height: 1.05;
   }
   .service-row__copy {
-    color: var(--ink-soft);
+    font-family: 'Inter', var(--sans);
+    color: var(--ink);
     margin: 0;
     max-width: 50ch;
   }
   .service-row__capabilities {
     margin-top: 1rem;
     display: flex; flex-wrap: wrap; gap: 0.4rem 1rem;
-    font-family: var(--mono); font-size: 0.75rem;
-    color: var(--ink-mute);
+    font-family: 'Inter', var(--mono); font-size: 0.75rem;
+    color: var(--ink-soft);
   }
   .service-row:hover .service-row__title {
     text-decoration: underline;

@@ -21,31 +21,44 @@ const { href, name, description, tags, mediaLabel, image, open = false, variant 
         <span class="placeholder-tag">{mediaLabel}</span>
       )}
     </div>
-    <div class="work-card__meta">
-      <div>
+    <div class="work-card__glass">
+      <div class="work-card__glass-inner">
         <div class="work-card__name">{name}</div>
         <p class="work-card__desc">{description}</p>
+        <div class="work-card__tags">
+          {tags.map(tag => <span>{tag}</span>)}
+        </div>
       </div>
-      <span aria-hidden="true">{open ? '→' : '↗'}</span>
-    </div>
-    <div class="work-card__tags">
-      {tags.map(tag => <span>{tag}</span>)}
+      <span class="work-card__arrow" aria-hidden="true">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M7 17L17 7"/>
+          <path d="M7 7h10v10"/>
+        </svg>
+      </span>
     </div>
   </a>
 </article>
 
 <style>
-  .work-card__media {
-    aspect-ratio: 3 / 4;
-    background: oklch(20% 0.01 280);
-    border-radius: 10px;
+  .work-card {
     position: relative;
+    border-radius: 20px;
     overflow: hidden;
+    background: oklch(20% 0.01 280);
+    transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .work-card:hover {
+    transform: translateY(-8px);
+  }
+  .work-card--lead   { aspect-ratio: 4 / 5; }
+  .work-card--offset { aspect-ratio: 4 / 5; }
+
+  .work-card__media {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
     display: grid; place-items: center;
   }
-  .work-card--lead   .work-card__media { aspect-ratio: 4 / 5; }
-  .work-card--offset .work-card__media { aspect-ratio: 4 / 5; }
-
   .work-card__media--open {
     background: oklch(94% 0.005 90);
     border: 1px dashed var(--rule);
@@ -62,29 +75,72 @@ const { href, name, description, tags, mediaLabel, image, open = false, variant 
     will-change: transform;
   }
   .work-card:hover .work-card__media--image img {
-    transform: scale(1.03);
+    transform: scale(1.06);
   }
 
-  .work-card__meta {
-    display: flex; justify-content: space-between; align-items: baseline;
-    margin-top: 1rem;
+  .work-card__glass {
+    position: absolute;
+    bottom: 1rem;
+    left: 1rem;
+    right: 1rem;
+    z-index: 2;
+    background: oklch(100% 0 0 / 0.35);
+    backdrop-filter: blur(24px) saturate(1.5);
+    -webkit-backdrop-filter: blur(24px) saturate(1.5);
+    border: 1px solid oklch(100% 0 0 / 0.22);
+    border-radius: 16px;
+    box-shadow:
+      0 4px 12px rgba(0,0,0,0.08),
+      0 0 0 1px oklch(100% 0 0 / 0.05) inset,
+      0 1px 0 oklch(100% 0 0 / 0.15) inset;
+    padding: 1.25rem 1.5rem;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 2.2);
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
     gap: 1rem;
+  }
+  .work-card:hover .work-card__glass {
+    bottom: 0.75rem;
+    left: 0.75rem;
+    right: 0.75rem;
+    padding: 1.5rem 1.75rem;
+  }
+  .work-card__glass-inner {
+    min-width: 0;
+    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 2.2);
+  }
+  .work-card:hover .work-card__glass-inner {
+    transform: scale(0.96);
   }
   .work-card__name {
     font-family: var(--display); font-weight: 700;
     font-size: var(--step-2); letter-spacing: -0.01em;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
   }
   .work-card__desc {
-    color: var(--ink-soft);
+    font-family: 'Inter', var(--sans);
+    color: var(--ink);
     margin: 0.25rem 0 0;
     max-width: 38ch;
   }
   .work-card__tags {
     margin-top: 0.6rem;
     display: flex; flex-wrap: wrap; gap: 0.4rem;
-    font-family: var(--mono); font-size: 0.7rem;
-    color: var(--ink-mute);
+    font-family: 'Inter', var(--mono); font-size: 0.7rem;
+    color: var(--ink-soft);
     text-transform: uppercase; letter-spacing: 0.1em;
   }
   .work-card__tags span::before { content: "/ "; }
+  .work-card__arrow {
+    flex-shrink: 0;
+    margin-top: 0.25rem;
+    color: var(--ink);
+    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 2.2);
+  }
+  .work-card:hover .work-card__arrow {
+    transform: translate(3px, -3px) scale(0.88);
+  }
 </style>
