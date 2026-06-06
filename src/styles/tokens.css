@@ -93,6 +93,43 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
   outline-offset: 2px;
 }
 
+/* ───── Liquid Glass utilities ───── */
+:root {
+  --glass-enabled: 1;
+  --glass-pill: none;
+  --glass-dropdown: none;
+}
+
+/* Glass pill container — groups items under one shared backdrop */
+.glass-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.35rem 0.5rem;
+  border-radius: 999px;
+  background: oklch(100% 0 0 / 0.06);
+  border: 1px solid oklch(100% 0 0 / 0.10);
+  height: 40px;
+  box-sizing: border-box;
+}
+
+@supports (backdrop-filter: blur(1px)) {
+  .glass-pill {
+    backdrop-filter: var(--glass-pill);
+    -webkit-backdrop-filter: var(--glass-pill);
+  }
+}
+
+/* Reduced transparency fallback */
+@media (prefers-reduced-transparency: reduce) {
+  .glass-pill {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    background: var(--surface);
+    border-color: var(--rule);
+  }
+}
+
 /* Placeholder block — used wherever production media/scenes aren't wired up yet. */
 .ph {
   position: relative;
@@ -146,6 +183,88 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
   .work-grid--paired > .work-card + .work-card {
     margin-top: clamp(2rem, 5vw, 3rem);
   }
+}
+
+/* ───── Liquid-glass cursor bubble ───── */
+#glass-cursor {
+  position: fixed;
+  top: 0; left: 0;
+  width: 36px; height: 36px;
+  border-radius: 999px;
+  pointer-events: none;
+  z-index: 9999;
+  isolation: isolate;
+
+  /* Transparent host — ring and glow live on child layers, never distorted */
+  background: transparent;
+  border: none;
+
+  will-change: transform, width, height;
+  transition:
+    width  0.45s cubic-bezier(0.175, 0.885, 0.32, 2.2),
+    height 0.45s cubic-bezier(0.175, 0.885, 0.32, 2.2),
+    opacity 0.25s ease;
+
+  opacity: 0;
+}
+
+#glass-cursor.is-visible { opacity: 1; }
+#glass-cursor.is-hover   { width: 56px; height: 56px; }
+#glass-cursor.is-click   {
+  width: 24px; height: 24px;
+  transition: width 0.12s ease, height 0.12s ease, opacity 0.25s ease;
+}
+
+/* Lens — captures background clearly, very subtle edge refraction */
+#glass-cursor .gc-lens {
+  position: absolute; inset: 0; border-radius: inherit; z-index: 1;
+  backdrop-filter: blur(0px);
+  -webkit-backdrop-filter: blur(0px);
+  filter: url(#cursor-glass);
+  -webkit-filter: url(#cursor-glass);
+  transform: scale(1);
+  transition: transform 0.45s cubic-bezier(0.175, 0.885, 0.32, 2.2);
+}
+
+#glass-cursor.is-hover .gc-lens { transform: scale(1.35); }
+
+/* Ring — drawn on top of lens so it is never distorted by the SVG filter.
+   Smooth concentric glow: inner photon ring + corona for dark bg,
+   diffuse shadow for light bg — no hard borders anywhere. */
+#glass-cursor .gc-ring {
+  position: absolute; inset: 0; border-radius: inherit; z-index: 2;
+  box-shadow:
+    /* photon ring — tight, smooth */
+    0 0 0   1px  rgba(255, 255, 255, 0.70),
+    /* inner corona */
+    0 0 5px  2px rgba(255, 255, 255, 0.22),
+    /* mid corona */
+    0 0 14px 4px rgba(255, 255, 255, 0.10),
+    /* outer bloom */
+    0 0 28px 8px rgba(255, 255, 255, 0.05),
+    /* dark halo — lifts off light backgrounds */
+    0 0 8px  4px rgba(0, 0, 0, 0.32),
+    0 6px 32px   rgba(0, 0, 0, 0.42);
+}
+
+/* Top-left glint */
+#glass-cursor .gc-shine {
+  position: absolute; inset: 0; border-radius: inherit; z-index: 3;
+  background: linear-gradient(
+    148deg,
+    rgba(255, 255, 255, 0.42) 0%,
+    rgba(255, 255, 255, 0.08) 38%,
+    rgba(255, 255, 255, 0.00) 60%
+  );
+  pointer-events: none;
+}
+
+@media (hover: none) { #glass-cursor { display: none; } }
+
+/* Reduced-motion: keep visible, transitions stay — JS uses faster lerp instead */
+@media (prefers-reduced-motion: reduce) {
+  #glass-cursor { transition: opacity 0.25s ease; }
+  #glass-cursor .gc-lens { transition: none; }
 }
 
 /* Services — alternating rhythm: even rows mirror title <-> copy (matches sketch) */

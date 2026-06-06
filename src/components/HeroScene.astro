@@ -1,51 +1,23 @@
 ---
+export interface Props {
+  class?: string;
+}
+const { class: className = '' } = Astro.props;
 ---
 
-<div class="hero__scene">
+<div class={`hero__scene ${className}`}>
   <video
-    id="hero-video-intro"
     class="hero__video"
     autoplay
-    muted
-    playsinline
-    preload="auto"
-    poster="/images/posters/gostudio_hero_poster.webp"
-  >
-    <source src="/video/gostudio_hero.mp4" type="video/mp4" />
-  </video>
-  <video
-    id="hero-video-loop"
-    class="hero__video hero__video--hidden"
     muted
     loop
     playsinline
     preload="auto"
-    poster="/images/posters/godstudio_hero_static_poster.webp"
+    poster="/images/posters/godstudio_hero_new_poster.webp"
   >
-    <source src="/video/godstudio_hero_static.mp4" type="video/mp4" />
+    <source src="/video/godstudio_hero_new.mp4" type="video/mp4" />
   </video>
 </div>
-
-<script is:inline>
-  (() => {
-    const intro = document.getElementById('hero-video-intro');
-    const loop = document.getElementById('hero-video-loop');
-    if (!intro || !loop) return;
-
-    const switchToLoop = () => {
-      intro.classList.add('hero__video--hidden');
-      loop.classList.remove('hero__video--hidden');
-      loop.play().catch(() => {});
-      intro.removeEventListener('ended', switchToLoop);
-    };
-
-    if (intro.ended) {
-      switchToLoop();
-    } else {
-      intro.addEventListener('ended', switchToLoop);
-    }
-  })();
-</script>
 
 <style>
   .hero__scene {
@@ -56,8 +28,18 @@
     background: #000;
     overflow: hidden;
   }
+  .hero__scene--case {
+    position: absolute;
+    inset: 0;
+    height: 100%;
+    border-bottom: none;
+  }
   @media (max-width: 720px) {
     .hero__scene { height: clamp(360px, 52dvh, 480px); }
+    .hero__scene--case {
+      position: relative;
+      height: clamp(300px, 70vw, 480px);
+    }
   }
   .hero__video {
     position: absolute;
@@ -66,8 +48,5 @@
     height: 100%;
     object-fit: cover;
     display: block;
-  }
-  .hero__video--hidden {
-    display: none;
   }
 </style>

@@ -33,7 +33,7 @@ const dict: Record<Lang, Dict> = {
     'hero.hint.2': 'build a landing page',
     'hero.hint.3': 'make it darker',
     'hero.hint.4': 'auf Deutsch',
-    'hero.title': 'Full-stack systems, built and operated by AI.',
+    'hero.title': 'Digital performance for your business',
     'hero.sub': 'Websites, SaaS platforms, backend infrastructure, AI agents. One studio.',
 
     'work.label': 'Selected work',

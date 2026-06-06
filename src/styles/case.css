@@ -4,7 +4,7 @@
   overflow: hidden;
   display: flex;
   align-items: flex-end;
-  min-height: 92vh;
+  min-height: 100dvh;
   padding-top: clamp(8rem, 14vw, 13rem);
   padding-bottom: clamp(4rem, 7vw, 6rem);
   isolation: isolate;
@@ -37,6 +37,29 @@
   letter-spacing: -0.025em;
   margin: 0;
   max-width: 22ch;
+}
+
+.intro-mobile { display: none; }
+@media (max-width: 720px) {
+  .intro {
+    display: block;
+    min-height: auto;
+    height: clamp(300px, 70vw, 480px);
+    padding: 0;
+  }
+  .intro__title-wrap { display: none; }
+  .intro-mobile {
+    display: block;
+    padding-block: clamp(1.5rem, 4vw, 2rem);
+    border-bottom: 1px solid var(--rule-soft);
+  }
+  .intro-mobile .intro__eyebrow {
+    color: var(--ink-mute);
+    margin-bottom: 1rem;
+  }
+  .intro-mobile .intro__client {
+    color: var(--ink);
+  }
 }
 .intro__body {
   margin-top: clamp(2rem, 4vw, 3rem);

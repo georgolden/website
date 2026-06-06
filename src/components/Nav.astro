@@ -11,61 +11,75 @@ const links = [
 ];
 ---
 
+
 <header class="nav">
   <div class="shell nav__row">
     <a href="/" class="logo" aria-label="GO Studio — home">GO Studio</a>
 
     <nav class="nav__links" aria-label="Primary">
-      {links.map(l => <a href={l.href}>{l.label}</a>)}
+      {links.map(l => (
+        <a href={l.href} class="lg-pill">
+          <span class="lg-effect" aria-hidden="true"></span>
+          <span class="lg-tint"   aria-hidden="true"></span>
+          <span class="lg-shine"  aria-hidden="true"></span>
+          <span class="pill-inner">{l.label}</span>
+        </a>
+      ))}
     </nav>
 
     <div class="nav__tools">
       <LanguageSwitcher client:load />
       <ChatButton client:load label={t(lang, 'nav.chat')} />
-      <button class="hamburger" id="nav-hamburger" type="button" aria-label={t(lang, 'nav.menu')} aria-expanded="false" aria-controls="mobile-overlay">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 7h16M4 17h16"/></svg>
+      <button class="hamburger" id="nav-hamburger" type="button"
+              aria-label={t(lang, 'nav.menu')} aria-expanded="false"
+              aria-controls="mobile-dropdown">
+        <svg class="hamburger-icon hamburger-open" width="24" height="24"
+             viewBox="0 0 256 256" fill="currentColor" aria-hidden="true">
+          <path d="M222,128a6,6,0,0,1-6,6H40a6,6,0,0,1,0-12H216A6,6,0,0,1,222,128ZM40,70H216a6,6,0,0,0,0-12H40a6,6,0,0,0,0,12ZM216,186H40a6,6,0,0,0,0,12H216a6,6,0,0,0,0-12Z"/>
+        </svg>
+        <svg class="hamburger-icon hamburger-close" width="24" height="24"
+             viewBox="0 0 256 256" fill="currentColor" aria-hidden="true">
+          <path d="M204.24,195.76a6,6,0,1,1-8.48,8.48L128,136.49,60.24,204.24a6,6,0,0,1-8.48-8.48L119.51,128,51.76,60.24a6,6,0,0,1,8.48-8.48L128,119.51l67.76-67.75a6,6,0,0,1,8.48,8.48L136.49,128Z"/>
+        </svg>
       </button>
     </div>
   </div>
+
+  <div class="mobile-dropdown" id="mobile-dropdown" aria-hidden="true"
+       role="dialog" aria-label="Mobile navigation">
+    <span class="lg-effect" aria-hidden="true"></span>
+    <span class="lg-tint"   aria-hidden="true"></span>
+    <span class="lg-shine"  aria-hidden="true"></span>
+    {links.map(l => <a class="mobile-drop-link" href={l.href}>{l.label}</a>)}
+  </div>
 </header>
 
-<div class="mobile-overlay" id="mobile-overlay" aria-hidden="true">
-  <div class="mobile-panel" role="dialog" aria-label="Mobile navigation">
-    <nav>
-      {links.map(l => <a class="mobile-link" href={l.href}>{l.label}</a>)}
-    </nav>
-  </div>
-</div>
-
 <script>
-  const btn = document.getElementById('nav-hamburger');
-  const overlay = document.getElementById('mobile-overlay');
-  if (btn && overlay) {
+  const btn      = document.getElementById('nav-hamburger');
+  const dropdown = document.getElementById('mobile-dropdown');
+  if (btn && dropdown) {
     const close = () => {
-      overlay.classList.remove('is-open');
-      overlay.setAttribute('aria-hidden', 'true');
+      dropdown.classList.remove('is-open');
+      dropdown.setAttribute('aria-hidden', 'true');
       btn.setAttribute('aria-expanded', 'false');
-      document.body.style.overflow = '';
     };
     const open = () => {
-      overlay.classList.add('is-open');
-      overlay.setAttribute('aria-hidden', 'false');
+      dropdown.classList.add('is-open');
+      dropdown.setAttribute('aria-hidden', 'false');
       btn.setAttribute('aria-expanded', 'true');
-      document.body.style.overflow = 'hidden';
     };
-    btn.addEventListener('click', () => {
-      overlay.classList.contains('is-open') ? close() : open();
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      dropdown.classList.contains('is-open') ? close() : open();
     });
-    overlay.addEventListener('click', (e) => {
-      if (e.target === overlay) close();
-    });
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && overlay.classList.contains('is-open')) close();
-    });
+    dropdown.addEventListener('click', (e) => { e.stopPropagation(); });
+    document.addEventListener('click', () => close());
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
   }
 </script>
 
 <style>
+  /* ── Nav shell ─────────────────────────────────────────── */
   .nav {
     position: fixed; top: 0; left: 0; right: 0; z-index: 50;
     background: transparent;
@@ -77,74 +91,168 @@ const links = [
     height: 64px;
   }
   .logo {
-    font-family: var(--display);
-    font-weight: 900;
-    font-size: 1.0625rem;
-    letter-spacing: -0.01em;
+    font-family: var(--display); font-weight: 900;
+    font-size: 1.0625rem; letter-spacing: -0.01em;
   }
   .logo::after { content: "."; color: var(--ink-mute); }
 
-  .nav__links { display: flex; gap: 2rem; }
+  /* ── Glass layer system ────────────────────────────────── */
+  /* Applied via :global so they work inside Solid islands too */
+
+  /* Pill containers: relative + isolation only — NO overflow:hidden (breaks backdrop-filter on Chrome/Windows) */
+  .nav__links a,
+  .mobile-dropdown {
+    position: relative;
+    isolation: isolate;
+  }
+
+  /* 1. Frosted backdrop layer — no backdrop-filter here; applied directly on pill containers below */
+  :global(.lg-effect) {
+    position: absolute; inset: 0; z-index: 0;
+    border-radius: inherit;
+  }
+
+  /* 2. Frosted tint layer */
+  :global(.lg-tint) {
+    position: absolute; inset: 0; z-index: 1;
+    border-radius: inherit;
+    background: rgba(255, 255, 255, 0.22);
+  }
+
+  /* 3. Shine layer */
+  :global(.lg-shine) { position: absolute; inset: 0; z-index: 2; border-radius: inherit; }
+
+  /* 4. Content above all glass layers */
+  :global(.pill-inner) {
+    position: relative; z-index: 3;
+    display: inline-flex; align-items: center;
+    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 2.2);
+  }
+
+  /* ── Nav links (Work / About) ──────────────────────────── */
+  .nav__links { display: flex; gap: 0.5rem; }
   .nav__links a {
     font-size: var(--step-1);
-    color: var(--ink-soft);
-    transition: color 0.2s;
+    color: var(--ink);
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 5rem;
+    padding: 0.45rem 1rem;
+    border-radius: 999px;
+    background: oklch(100% 0 0 / 0.10);
+    border: 1px solid oklch(15% 0.005 280 / 0.12);
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1), 0 0 20px rgba(0,0,0,0.05);
+    backdrop-filter: blur(12px) saturate(1.4);
+    -webkit-backdrop-filter: blur(12px) saturate(1.4);
+    transition: padding 0.4s cubic-bezier(0.175, 0.885, 0.32, 2.2);
+    font-weight: 600;
   }
-  .nav__links a:hover { color: var(--ink); }
+  .nav__links a:hover { padding: 0.6rem 1.3rem; }
+  .nav__links a:hover .pill-inner { transform: scale(0.88); }
+  .nav__links a:active { padding: 0.35rem 0.8rem; }
 
+  @media (prefers-reduced-motion: reduce) {
+    .nav__links a, :global(.pill-inner) { transition: none; }
+  }
+
+  /* ── Nav tools ─────────────────────────────────────────── */
   .nav__tools { display: flex; align-items: center; gap: 0.75rem; }
+  .hamburger { display: none; padding: 0.35rem; color: var(--ink); }
+  .hamburger-close { display: none; }
+  .hamburger[aria-expanded="true"] .hamburger-open  { display: none; }
+  .hamburger[aria-expanded="true"] .hamburger-close { display: block; }
 
-  .hamburger { display: none; padding: 0.4rem; color: var(--ink); }
-
+  /* ── Mobile pill group ─────────────────────────────────── */
   @media (max-width: 768px) {
     .nav__links { display: none; }
-    .hamburger { display: inline-flex; }
+    .hamburger  { display: inline-flex; }
+
+    .nav__tools {
+      gap: 0;
+      padding: 0.22rem 0.3rem;
+      border-radius: 999px;
+      background: oklch(100% 0 0 / 0.65);
+      border: 1px solid oklch(15% 0.005 280 / 0.12);
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,1);
+      /* No backdrop-filter here — it creates a compositing boundary that breaks
+         backdrop-filter on child dropdowns (.lang__menu, .mobile-dropdown) */
+    }
+
+    :global(.lang__btn),
+    :global(.chat-btn) {
+      background: transparent !important;
+      border: none !important;
+      box-shadow: none !important;
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+      min-width: auto !important;
+      padding: 0.35rem 0.5rem !important;
+      overflow: visible !important;
+    }
+
+    /* Hide glass layers inside mobile grouped pill */
+    :global(.lang__btn .lg-effect), :global(.lang__btn .lg-tint), :global(.lang__btn .lg-shine),
+    :global(.chat-btn .lg-effect),  :global(.chat-btn .lg-tint),  :global(.chat-btn .lg-shine) {
+      display: none;
+    }
+
+    .hamburger { padding: 0.35rem 0.5rem; }
+    .nav__tools > * + * { border-left: 1px solid oklch(15% 0.005 280 / 0.10); }
   }
 
-  /* Mobile overlay */
-  .mobile-overlay {
-    position: fixed; inset: 0;
-    z-index: 40;
-    background: rgba(0,0,0,0.4);
-    backdrop-filter: blur(4px);
-    display: flex; justify-content: flex-end;
+  /* ── Mobile dropdown ───────────────────────────────────── */
+  .mobile-dropdown {
+    display: none;
+    position: absolute; top: calc(100% + 0.5rem); right: var(--gutter);
+    flex-direction: column; gap: 0.2rem;
+    padding: 0.35rem;
+    border-radius: 18px;
+    background: oklch(100% 0 0 / 0.10);
+    border: 1px solid oklch(15% 0.005 280 / 0.12);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.14);
+    backdrop-filter: blur(12px) saturate(1.4);
+    -webkit-backdrop-filter: blur(12px) saturate(1.4);
     opacity: 0; pointer-events: none;
-    transition: opacity 0.25s ease;
+    transform: translateY(-6px) scale(0.97);
+    transform-origin: top right;
+    transition: opacity 0.18s ease, transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+    z-index: 55;
   }
-  .mobile-overlay.is-open { opacity: 1; pointer-events: auto; }
-  .mobile-panel {
-    width: min(320px, 85vw);
-    height: 100%;
-    background: var(--bg);
-    padding: 88px var(--gutter) var(--gutter);
-    transform: translateX(100%);
-    transition: transform 0.3s ease-out;
-    overflow-y: auto;
-  }
-  .mobile-overlay.is-open .mobile-panel { transform: translateX(0); }
-  .mobile-panel nav { display: flex; flex-direction: column; gap: 4px; }
-  .mobile-link {
-    font-family: var(--display);
-    font-weight: 700;
-    font-size: 1.5rem;
-    padding: 14px 0;
-    border-bottom: 1px solid var(--rule);
-    color: var(--ink);
-  }
-  @media (min-width: 769px) {
-    .mobile-overlay { display: none !important; }
-  }
+  @media (max-width: 768px) { .mobile-dropdown { display: flex; } }
+  .mobile-dropdown.is-open { opacity: 1; pointer-events: auto; transform: none; }
 
-  /* Chat button (rendered by the Solid island) */
-  :global(.chat-btn) {
-    display: inline-flex; align-items: center; gap: 0.5rem;
-    padding: 0.55rem 0.95rem; border-radius: 999px;
-    background: var(--ink); color: var(--bg);
+  .mobile-drop-link {
+    position: relative; z-index: 3;
+    display: block; padding: 0.65rem 1.4rem;
+    border-radius: 12px;
     font-size: var(--step-1); font-weight: 500;
+    color: var(--ink); white-space: nowrap;
+    transition: background 0.15s;
   }
+  .mobile-drop-link:hover { background: oklch(15% 0.005 280 / 0.06); }
+
+  /* ── Chat button ───────────────────────────────────────── */
+  :global(.chat-btn) {
+    position: relative; isolation: isolate;
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 5rem;
+    padding: 0.45rem 1rem; border-radius: 999px;
+    background: oklch(10% 0.005 280 / 0.88);
+    border: 1px solid oklch(100% 0 0 / 0.12);
+    box-shadow: 0 4px 6px rgba(0,0,0,0.2), 0 0 20px rgba(0,0,0,0.1);
+    backdrop-filter: blur(12px) saturate(1.4);
+    -webkit-backdrop-filter: blur(12px) saturate(1.4);
+    color: #fff; font-size: var(--step-1); font-weight: 600;
+    transition: padding 0.4s cubic-bezier(0.175, 0.885, 0.32, 2.2);
+  }
+  /* Dark tint for chat pill */
+  :global(.chat-btn .lg-tint) { background: rgba(255,255,255,0.06); }
+  :global(.chat-btn .pill-inner) { gap: 0.5rem; }
+  :global(.chat-btn:hover) { padding: 0.6rem 1.3rem; }
+  :global(.chat-btn:hover .pill-inner) { transform: scale(0.88); }
+  :global(.chat-btn:active) { padding: 0.35rem 0.8rem; }
+
   :global(.chat-btn__dot) {
-    width: 6px; height: 6px; border-radius: 50%;
-    background: var(--ink-mute);
+    width: 6px; height: 6px; border-radius: 50%; background: var(--ink-mute);
   }
   :global(.chat-btn__dot.is-on) {
     background: var(--green);
@@ -152,48 +260,101 @@ const links = [
     animation: chatPulse 2s ease-out infinite;
   }
   @keyframes chatPulse {
-    0%   { box-shadow: 0 0 0 0 oklch(72% 0.18 145 / 0.55); }
+    0%   { box-shadow: 0 0 0 0   oklch(72% 0.18 145 / 0.55); }
     100% { box-shadow: 0 0 0 8px oklch(72% 0.18 145 / 0); }
   }
 
-  /* Language switcher (rendered by the Solid island) */
+  /* ── Language switcher ─────────────────────────────────── */
   :global(.lang) { position: relative; }
   :global(.lang__btn) {
-    display: inline-flex; align-items: center; gap: 0.4rem;
-    font-size: var(--step-1); color: var(--ink-soft);
-    padding: 0.4rem 0.6rem; border-radius: 999px;
-    transition: background 0.2s, color 0.2s;
+    position: relative; isolation: isolate;
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 5rem;
+    padding: 0.45rem 1rem; border-radius: 999px;
+    font-size: var(--step-1); color: var(--ink);
+    background: oklch(100% 0 0 / 0.10);
+    border: 1px solid oklch(15% 0.005 280 / 0.12);
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1), 0 0 20px rgba(0,0,0,0.05);
+    backdrop-filter: blur(12px) saturate(1.4);
+    -webkit-backdrop-filter: blur(12px) saturate(1.4);
+    transition: padding 0.4s cubic-bezier(0.175, 0.885, 0.32, 2.2);
+    font-weight: 600;
   }
-  :global(.lang__btn:hover) { background: var(--rule-soft); color: var(--ink); }
+  :global(.lang__btn .pill-inner) { gap: 0.4rem; }
+  :global(.lang__btn:hover) { padding: 0.6rem 1.3rem; }
+  :global(.lang__btn:hover .pill-inner) { transform: scale(0.88); }
+  :global(.lang__btn:active) { padding: 0.35rem 0.8rem; }
+
   :global(.lang__menu) {
-    position: absolute; top: calc(100% + 4px); right: 0;
+    position: absolute; top: calc(100% + 6px); right: 0;
     list-style: none; margin: 0; padding: 4px;
-    background: var(--surface);
-    border: 1px solid var(--rule);
-    border-radius: 8px;
-    box-shadow: 0 8px 24px -12px oklch(15% 0.005 280 / 0.25);
+    background: oklch(100% 0 0 / 0.10);
+    border: 1px solid oklch(15% 0.005 280 / 0.12);
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+    backdrop-filter: blur(12px) saturate(1.4);
+    -webkit-backdrop-filter: blur(12px) saturate(1.4);
     min-width: 140px; z-index: 60;
+    isolation: isolate;
   }
   :global(.lang__opt) {
+    position: relative; z-index: 3;
     display: block; width: 100%; text-align: left;
     font-size: 0.875rem; padding: 8px 12px;
-    border-radius: 4px;
-    color: var(--ink);
+    border-radius: 10px; color: var(--ink);
     transition: background 0.15s;
   }
-  :global(.lang__opt:hover) { background: var(--rule-soft); }
-  :global(.lang__opt.is-active) { font-weight: 600; color: var(--ink); background: var(--rule-soft); }
+  :global(.lang__opt:hover)    { background: oklch(15% 0.005 280 / 0.06); }
+  :global(.lang__opt.is-active){ font-weight: 600; background: oklch(15% 0.005 280 / 0.08); }
 
   @media (max-width: 768px) {
-    :global(.lang__btn span:last-child) { display: none; }
-    :global(.chat-btn__label) { display: none; }
+    :global(.lang__btn .pill-inner span:last-child) { display: none; }
+    :global(.chat-btn__label)           { display: none; }
   }
 
-  :global(.nav-white) .logo { color: #fff; }
+  /* ── nav-white (dark hero) ─────────────────────────────── */
+  :global(.nav-white) .logo        { color: #fff; }
   :global(.nav-white) .logo::after { color: oklch(100% 0 0 / 0.45); }
-  :global(.nav-white) .nav__links a { color: oklch(100% 0 0 / 0.85); }
-  :global(.nav-white) .nav__links a:hover { color: #fff; }
-  :global(.nav-white) .hamburger { color: #fff; }
-  :global(.nav-white .lang__btn) { color: oklch(100% 0 0 / 0.85); }
-  :global(.nav-white .lang__btn:hover) { color: #fff; background: oklch(100% 0 0 / 0.08); }
+  :global(.nav-white) .hamburger   { color: #fff; }
+
+  :global(.nav-white) .nav__links a {
+    color: oklch(100% 0 0 / 0.85);
+    border-color: oklch(100% 0 0 / 0.20);
+  }
+  :global(.nav-white) .nav__links a :global(.lg-tint) { background: rgba(255,255,255,0.12); }
+
+  :global(.nav-white .lang__btn) {
+    color: oklch(100% 0 0 / 0.90);
+    border-color: oklch(100% 0 0 / 0.18);
+  }
+  :global(.nav-white .lang__btn .lg-tint) { background: rgba(255,255,255,0.12); }
+
+  :global(.nav-white .lang__menu) {
+    background: oklch(18% 0.005 280 / 0.82);
+    border-color: oklch(100% 0 0 / 0.14);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.28);
+  }
+  :global(.nav-white .lang__menu .lg-tint)  { background: rgba(255,255,255,0.06); }
+  :global(.nav-white .lang__opt)            { color: oklch(100% 0 0 / 0.85); }
+  :global(.nav-white .lang__opt:hover)      { background: oklch(100% 0 0 / 0.08); color: #fff; }
+  :global(.nav-white .lang__opt.is-active)  { background: oklch(100% 0 0 / 0.10); color: #fff; }
+
+  :global(.nav-white) .mobile-dropdown {
+    background: oklch(100% 0 0 / 0.10);
+    border-color: oklch(100% 0 0 / 0.20);
+  }
+  :global(.nav-white) .mobile-dropdown :global(.lg-tint) { background: rgba(255,255,255,0.12); }
+  :global(.nav-white) .mobile-drop-link { color: oklch(100% 0 0 / 0.85); }
+  :global(.nav-white) .mobile-drop-link:hover { color: #fff; background: oklch(100% 0 0 / 0.08); }
+
+  @media (max-width: 768px) {
+    :global(.nav-white) .nav__tools {
+      background: oklch(100% 0 0 / 0.22);
+      border-color: oklch(100% 0 0 / 0.20);
+      box-shadow: 0 1px 4px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.25);
+    }
+    :global(.nav-white) .nav__tools > * + * { border-left-color: oklch(100% 0 0 / 0.15); }
+    :global(.nav-white .lang__btn) { background: transparent !important; border: none !important; box-shadow: none !important; }
+    :global(.nav-white .chat-btn)  { background: transparent !important; border: none !important; box-shadow: none !important; color: oklch(100% 0 0 / 0.90) !important; }
+  }
 </style>
