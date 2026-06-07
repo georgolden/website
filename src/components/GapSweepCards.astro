@@ -1,0 +1,390 @@
+---
+export interface Props {
+  categories: {
+    label: string;
+    them: string;
+    us: string;
+  }[];
+}
+const { categories } = Astro.props;
+
+const bgGradients = [
+  'linear-gradient(135deg, #FAFBFF 0%, #F5F7FE 100%)',
+  'linear-gradient(135deg, #FFFFFF 0%, #F0F4FD 100%)',
+  'linear-gradient(135deg, #F8FAFE 0%, #EBF1FC 100%)',
+  'linear-gradient(135deg, #FFFFFF 0%, #FDF8F3 100%)',
+  'linear-gradient(135deg, #FFFDFB 0%, #FDF4EC 100%)',
+  'linear-gradient(135deg, #FFF9F3 0%, #FCEFE6 100%)',
+];
+
+const accentOverlays = [
+  'radial-gradient(ellipse at 70% 80%, oklch(55% 0.12 250 / 0.06) 0%, transparent 55%)',
+  'radial-gradient(ellipse at 85% 25%, oklch(60% 0.10 55 / 0.07) 0%, transparent 50%)',
+  'radial-gradient(ellipse at 25% 85%, oklch(58% 0.11 248 / 0.06) 0%, transparent 60%)',
+  'radial-gradient(ellipse at 55% 45%, oklch(56% 0.10 52 / 0.05) 0%, transparent 55%)',
+  'radial-gradient(ellipse at 15% 65%, oklch(62% 0.09 250 / 0.06) 0%, transparent 45%)',
+  'radial-gradient(ellipse at 75% 15%, oklch(54% 0.12 58 / 0.07) 0%, transparent 50%)',
+];
+---
+
+<div class="gap-sweep" data-gap-sweep>
+  <div class="gap-sweep-card gap-sweep-card--header" data-sweep-card style={`--card-bg: ${bgGradients[0]}; --card-accent: ${accentOverlays[0]};`}>
+    <div class="gap-sweep-card__shell">
+      <div class="gap-sweep-card__bg"></div>
+      <div class="gap-sweep-card__accent"></div>
+
+      <!-- Sizer gives the shell its natural height -->
+      <div class="gap-sweep-card__sizer">
+        <div class="gap-sweep-card__half gap-sweep-card__half--pos">
+          <div class="gap-sweep-card__head">
+            <p class="gap__label">What we ship</p>
+            <h3 class="gap__headline">The whole system, operated.</h3>
+          </div>
+        </div>
+        <div class="gap-sweep-card__half gap-sweep-card__half--neg">
+          <div class="gap-sweep-card__head">
+            <p class="gap__label">What most studios ship</p>
+            <h3 class="gap__headline">Design, build, hand off.</h3>
+          </div>
+        </div>
+      </div>
+
+      <!-- Positive layer: reveals from left to right -->
+      <div class="gap-sweep-card__layer gap-sweep-card__layer--pos">
+        <div class="gap-sweep-card__half gap-sweep-card__half--pos">
+          <div class="gap-sweep-card__head">
+            <p class="gap__label">What we ship</p>
+            <h3 class="gap__headline">The whole system, operated.</h3>
+          </div>
+        </div>
+        <div class="gap-sweep-card__half gap-sweep-card__half--neg gap-sweep-card__half--ghost"></div>
+      </div>
+
+      <!-- Negative layer: hides from left to right -->
+      <div class="gap-sweep-card__layer gap-sweep-card__layer--neg">
+        <div class="gap-sweep-card__half gap-sweep-card__half--pos gap-sweep-card__half--ghost"></div>
+        <div class="gap-sweep-card__half gap-sweep-card__half--neg">
+          <div class="gap-sweep-card__head">
+            <p class="gap__label">What most studios ship</p>
+            <h3 class="gap__headline">Design, build, hand off.</h3>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {categories.map((cat, i) => (
+    <div class="gap-sweep-card" data-sweep-card style={`--card-bg: ${bgGradients[i + 1]}; --card-accent: ${accentOverlays[i + 1]};`}>
+      <div class="gap-sweep-card__shell">
+        <div class="gap-sweep-card__bg"></div>
+        <div class="gap-sweep-card__accent"></div>
+
+        <div class="gap-sweep-card__sizer">
+          <div class="gap-sweep-card__half gap-sweep-card__half--pos">
+            <div class="gap-sweep-card__row">
+              <span class="gap-sweep-card__icon gap-sweep-card__icon--check">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              </span>
+              <div class="gap-sweep-card__text">
+                <span class="gap__cat">{cat.label}</span>
+                <p class="gap__body">{cat.us}</p>
+              </div>
+            </div>
+          </div>
+          <div class="gap-sweep-card__half gap-sweep-card__half--neg">
+            <div class="gap-sweep-card__row">
+              <span class="gap-sweep-card__icon gap-sweep-card__icon--x">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </span>
+              <div class="gap-sweep-card__text">
+                <span class="gap__cat">{cat.label}</span>
+                <p class="gap__body">{cat.them}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="gap-sweep-card__layer gap-sweep-card__layer--pos">
+          <div class="gap-sweep-card__half gap-sweep-card__half--pos">
+            <div class="gap-sweep-card__row">
+              <span class="gap-sweep-card__icon gap-sweep-card__icon--check">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              </span>
+              <div class="gap-sweep-card__text">
+                <span class="gap__cat">{cat.label}</span>
+                <p class="gap__body">{cat.us}</p>
+              </div>
+            </div>
+          </div>
+          <div class="gap-sweep-card__half gap-sweep-card__half--neg gap-sweep-card__half--ghost"></div>
+        </div>
+
+        <div class="gap-sweep-card__layer gap-sweep-card__layer--neg">
+          <div class="gap-sweep-card__half gap-sweep-card__half--pos gap-sweep-card__half--ghost"></div>
+          <div class="gap-sweep-card__half gap-sweep-card__half--neg">
+            <div class="gap-sweep-card__row">
+              <span class="gap-sweep-card__icon gap-sweep-card__icon--x">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </span>
+              <div class="gap-sweep-card__text">
+                <span class="gap__cat">{cat.label}</span>
+                <p class="gap__body">{cat.them}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  ))}
+</div>
+
+<style>
+  .gap-sweep {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-top: clamp(2rem, 4vw, 3rem);
+  }
+
+  .gap-sweep-card {
+    position: relative;
+    width: 100%;
+  }
+
+  .gap-sweep-card__shell {
+    position: relative;
+    isolation: isolate;
+    border-radius: 20px;
+    overflow: hidden;
+    border: 1px solid oklch(15% 0.01 280 / 0.10);
+    box-shadow:
+      0 2px 8px rgba(0,0,0,0.04),
+      0 0 0 1px rgba(255,255,255,0.6) inset;
+  }
+
+  .gap-sweep-card__bg {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    background: var(--card-bg);
+    pointer-events: none;
+  }
+
+  .gap-sweep-card__accent {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background: var(--card-accent);
+    pointer-events: none;
+  }
+
+  .gap-sweep-card__shell::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 5;
+    border-radius: inherit;
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.8),
+      inset 0 -1px 0 rgba(0,0,0,0.03);
+    pointer-events: none;
+  }
+
+  /* Sizer establishes natural height from content */
+  .gap-sweep-card__sizer {
+    position: relative;
+    z-index: 0;
+    display: flex;
+    width: 100%;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  /* Layers overlay on top of sizer */
+  .gap-sweep-card__layer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    display: flex;
+    z-index: 2;
+    background: transparent;
+    will-change: clip-path;
+  }
+
+  .gap-sweep-card__layer--pos {
+    clip-path: inset(0 calc(100% - var(--sweep, 0%)) 0 0);
+  }
+  .gap-sweep-card__layer--neg {
+    clip-path: inset(0 0 0 var(--sweep, 0%));
+  }
+
+  /* Each half is 50% width */
+  .gap-sweep-card__half {
+    width: 50%;
+    padding: 1.25rem 1.5rem;
+    display: flex;
+    align-items: center;
+    box-sizing: border-box;
+  }
+  .gap-sweep-card--header .gap-sweep-card__half {
+    padding: 1.5rem 2rem;
+    align-items: flex-start;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .gap-sweep-card__half--pos {
+    justify-content: flex-start;
+  }
+  .gap-sweep-card__half--neg {
+    justify-content: flex-end;
+    text-align: right;
+  }
+
+  /* Ghost halves are invisible but maintain layout */
+  .gap-sweep-card__half--ghost {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .gap-sweep-card__head {
+    position: relative;
+    z-index: 3;
+  }
+
+  .gap-sweep-card__row {
+    position: relative;
+    z-index: 3;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    width: 100%;
+  }
+  .gap-sweep-card__half--neg .gap-sweep-card__row {
+    flex-direction: row-reverse;
+    justify-content: flex-end;
+  }
+
+  .gap-sweep-card__icon {
+    flex-shrink: 0;
+    margin-top: 0.15rem;
+    position: relative;
+    z-index: 3;
+  }
+  .gap-sweep-card__icon--check {
+    color: oklch(50% 0.14 220);
+  }
+  .gap-sweep-card__icon--x {
+    color: oklch(55% 0.16 25);
+  }
+
+  .gap-sweep-card__text {
+    min-width: 0;
+    position: relative;
+    z-index: 3;
+  }
+  .gap-sweep-card__half--neg .gap-sweep-card__text {
+    text-align: right;
+  }
+
+  .gap__label {
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: oklch(45% 0.04 280);
+    margin: 0 0 0.5rem;
+    position: relative;
+    z-index: 3;
+  }
+  .gap__headline {
+    font-family: var(--display);
+    font-weight: 700;
+    font-size: clamp(1.35rem, 1rem + 1.2vw, 2rem);
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    margin: 0;
+    max-width: 20ch;
+    position: relative;
+    z-index: 3;
+    color: oklch(20% 0.04 280);
+  }
+  .gap__cat {
+    display: block;
+    font-family: 'Inter', var(--mono);
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: oklch(40% 0.05 280);
+    margin-bottom: 0.35rem;
+    position: relative;
+    z-index: 3;
+  }
+  .gap__body {
+    margin: 0;
+    line-height: 1.45;
+    font-family: 'Inter', var(--sans);
+    position: relative;
+    z-index: 3;
+    color: oklch(25% 0.03 280);
+  }
+
+  @media (max-width: 720px) {
+    .gap-sweep-card__half {
+      padding: 1rem 1.25rem;
+    }
+    .gap-sweep-card--header .gap-sweep-card__half {
+      padding: 1.25rem 1.5rem;
+    }
+    .gap__headline {
+      font-size: clamp(1.15rem, 1rem + 0.8vw, 1.5rem);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .gap-sweep-card__layer--pos {
+      clip-path: inset(0 0 0 0) !important;
+    }
+    .gap-sweep-card__layer--neg {
+      clip-path: inset(0 0 0 0) !important;
+    }
+  }
+</style>
+
+<script>
+  (() => {
+    const container = document.querySelector('[data-gap-sweep]');
+    if (!container) return;
+
+    const cards = container.querySelectorAll('[data-sweep-card]');
+    if (!cards.length) return;
+
+    const state = new Array(cards.length).fill(0);
+
+    function update() {
+      const vh = window.innerHeight;
+
+      cards.forEach((card, i) => {
+        const cardRect = card.getBoundingClientRect();
+        const cardCenter = cardRect.top + cardRect.height * 0.5;
+
+        const startY = vh * 0.85;
+        const endY = vh * 0.35;
+
+        let progress = (startY - cardCenter) / (startY - endY);
+        progress = Math.max(0, Math.min(1, progress));
+
+        const smoothing = 0.06;
+        state[i] += (progress - state[i]) * smoothing;
+
+        const sweepPct = (state[i] * 100).toFixed(2) + '%';
+        card.style.setProperty('--sweep', sweepPct);
+      });
+
+      requestAnimationFrame(update);
+    }
+
+    requestAnimationFrame(update);
+  })();
+</script>
