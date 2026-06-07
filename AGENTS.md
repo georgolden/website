@@ -177,3 +177,91 @@ const hmr = process.env.HMR_HOST
 ```
 
 Run as `HMR_HOST=georgoldenburger.com npm run dev`.
+
+### 16. `prefers-reduced-motion` + `transition-duration: 0.01ms !important` silently kills all hover animations on Windows
+
+**Mistake:** The global `@media (prefers-reduced-motion: reduce)` reset included `transition-duration: 0.01ms !important` targeting `*, *::before, *::after`. On Windows, "Show animations" is frequently disabled in Settings → Ease of Access, which sets `prefers-reduced-motion: reduce` to `true`. This single rule made every hover interaction on the entire site feel instant and broken — nav pill expand, work card lift, glass cursor fade — all stripped to 0ms.
+
+**Why it's sneaky:** macOS users almost never have this OS flag set, so the bug is invisible during development and only surfaces on Windows machines. The `!important` ensures it wins over every component-level transition.
+
+**Root cause diagnosis — what to look for in the debug console:**
+```js
+window.matchMedia('(prefers-reduced-motion: reduce)').matches // true on Windows with animations off
+```
+Then scan stylesheets for the killer rule:
+```js
+// Any rule containing both "transition" and "0.01ms" is a global animation killer
+```
+
+**Rule:** Never put `transition-duration` inside a global reduced-motion reset. `prefers-reduced-motion` exists to suppress **vestibular-trigger motion** — looping animations, parallax, auto-playing sequences. Hover feedback transitions are UI affordances, not motion sickness triggers. Kill only `animation-duration`.
+
+```css
+/* ❌ WRONG — kills every hover transition on Windows */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important; /* ← this is the killer */
+  }
+}
+
+/* ✅ RIGHT — kills looping animations, leaves hover transitions intact */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    /* transition-duration intentionally omitted */
+  }
+  html { scroll-behavior: auto; }
+}
+```
+
+For cursor/motion effects that genuinely should be reduced: use a faster lerp factor in JS rather than `display: none` or `transition: none`. A faster spring (lerp 0.4 instead of 0.11) respects the preference without breaking the feature entirely.
+
+```js
+const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const lerp = reduced ? 0.40 : 0.11; // fast spring vs smooth spring
+```
+
+### 17. `transition: all` causes GPU thrash and janky animations on Windows
+
+**Mistake:** Used `transition: all 0.4s` on elements with `backdrop-filter`. On Windows, `transition: all` causes the browser to animate every CSS property simultaneously — including `color`, `border`, `box-shadow`, `padding`, `inset`, and more — even properties that aren't changing. Combined with `backdrop-filter`, which forces a separate compositing layer that must be re-blended every frame, this produces visibly stuttery hover animations on Windows GPU drivers even on high-end hardware.
+
+**Why macOS doesn't show it:** Metal gives Chrome near-zero-cost compositing for `backdrop-filter`. Windows DirectX/D3D compositing is slower for the same operations.
+
+**Rule:** Always enumerate only the properties that actually change. Never use `transition: all` on any element that has `backdrop-filter`, `box-shadow`, or layout-affecting properties (`inset`, `padding`, `width`, `height`).
+
+```css
+/* ❌ WRONG — animates every property, GPU thrash on Windows */
+.work-card__glass {
+  backdrop-filter: blur(24px);
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 2.2);
+}
+
+/* ✅ RIGHT — only the properties that change on hover */
+.work-card__glass {
+  backdrop-filter: blur(24px);
+  transition:
+    bottom   0.4s cubic-bezier(0.175, 0.885, 0.32, 2.2),
+    left     0.4s cubic-bezier(0.175, 0.885, 0.32, 2.2),
+    right    0.4s cubic-bezier(0.175, 0.885, 0.32, 2.2),
+    padding  0.4s cubic-bezier(0.175, 0.885, 0.32, 2.2);
+}
+```
+
+Add `will-change: transform` to elements that animate `transform` so the browser can pre-promote them to their own compositing layer before the hover fires:
+
+```css
+/* ✅ Pre-promote so hover lift doesn't cause a layer promotion mid-animation */
+.work-card {
+  will-change: transform;
+  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+```
+
+**Cross-platform animation checklist before shipping:**
+1. `window.matchMedia('(prefers-reduced-motion: reduce)').matches` — test on Windows with animations disabled
+2. No `transition: all` anywhere, especially not on elements with `backdrop-filter`
+3. No `transition-duration: 0.01ms !important` in global reduced-motion reset
+4. `will-change: transform` on elements that use transform-based hover animations
+5. `backdrop-filter` elements should have their own compositing layer and minimal layout changes on hover

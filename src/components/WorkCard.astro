@@ -76,7 +76,7 @@ const firstSentence = description.split(/\.(\s|$)/)[0] + '.';
     transition: transform 1.4s cubic-bezier(0.4, 0, 0.2, 1);
     will-change: transform;
   }
-  .work-card:hover .work-card__media--image img {
+  .work-card__media:hover img {
     transform: scale(1.06);
   }
 
@@ -96,13 +96,17 @@ const firstSentence = description.split(/\.(\s|$)/)[0] + '.';
       0 0 0 1px oklch(100% 0 0 / 0.05) inset,
       0 1px 0 oklch(100% 0 0 / 0.15) inset;
     padding: 1.25rem 1.5rem;
-    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 2.2);
+    transition:
+      bottom  0.4s cubic-bezier(0.175, 0.885, 0.32, 2.2),
+      left    0.4s cubic-bezier(0.175, 0.885, 0.32, 2.2),
+      right   0.4s cubic-bezier(0.175, 0.885, 0.32, 2.2),
+      padding 0.4s cubic-bezier(0.175, 0.885, 0.32, 2.2);
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
     gap: 1rem;
   }
-  .work-card:hover .work-card__glass {
+  .work-card__glass:hover {
     bottom: 0.75rem;
     left: 0.75rem;
     right: 0.75rem;
@@ -112,7 +116,7 @@ const firstSentence = description.split(/\.(\s|$)/)[0] + '.';
     min-width: 0;
     transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 2.2);
   }
-  .work-card:hover .work-card__glass-inner {
+  .work-card__glass:hover .work-card__glass-inner {
     transform: scale(0.96);
   }
   .work-card__name {
@@ -148,7 +152,7 @@ const firstSentence = description.split(/\.(\s|$)/)[0] + '.';
     color: var(--ink);
     transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 2.2);
   }
-  .work-card:hover .work-card__arrow {
+  .work-card__glass:hover .work-card__arrow {
     transform: translate(3px, -3px) scale(0.88);
   }
 </style>
