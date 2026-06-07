@@ -19,6 +19,8 @@
     "three": "^0.184.0"
   },
   "devDependencies": {
+    "playwright": "^1.60.0",
+    "playwright-extra-plugin-stealth": "^0.0.1",
     "@types/three": "^0.184.1"
   }
 }
